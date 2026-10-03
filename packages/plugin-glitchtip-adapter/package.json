@@ -1,0 +1,17 @@
+{
+  "name": "@loams-plugins/plugin-glitchtip-adapter",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vp test"
+  },
+  "dependencies": {
+    "@loams-plugins/core": "*",
+    "@loams-plugins/plugin-upstream-http": "*",
+    "cordis": "^4.0.0-rc.10"
+  }
+}

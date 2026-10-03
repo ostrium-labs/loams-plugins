@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "lib",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*"],
+  "//": "src/ui belongs to the UI agent (it brings its own jsx settings); this project must not typecheck it.",
+  "exclude": ["src/ui", "tests"],
+  "references": [
+    {
+      "path": "../types"
+    },
+    {
+      "path": "../plugin-upstream-http"
+    },
+    {
+      "path": "../plugin-store"
+    },
+    {
+      "path": "../plugin-dashboard-spec"
+    }
+  ]
+}

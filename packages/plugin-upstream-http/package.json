@@ -1,0 +1,15 @@
+{
+  "name": "@loams-plugins/plugin-upstream-http",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vp test"
+  },
+  "dependencies": {
+    "cordis": "^4.0.0-rc.10"
+  }
+}

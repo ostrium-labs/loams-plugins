@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib"
+  },
+  "include": ["src", "tests"],
+  "exclude": ["tests"],
+  "references": [
+    {
+      "path": "../types"
+    },
+    {
+      "path": "../plugin-superset-adapter"
+    }
+  ]
+}

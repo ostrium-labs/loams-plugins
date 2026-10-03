@@ -1,0 +1,33 @@
+{
+  "name": "@loams-plugins/server",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "mcp": "ENABLE_MCP=true tsx src/index.ts"
+  },
+  "dependencies": {
+    "@connectrpc/connect": "2.2.0",
+    "@cordisjs/plugin-logger-console": "^1.0.0",
+    "@loams-plugins/bi-rpc": "*",
+    "@loams-plugins/core": "*",
+    "@loams-plugins/plugin-agent-tools": "*",
+    "@loams-plugins/plugin-dashboard-spec": "*",
+    "@loams-plugins/plugin-data": "*",
+    "@loams-plugins/plugin-echarts-render": "*",
+    "@loams-plugins/plugin-flint": "*",
+    "@loams-plugins/plugin-forgejo-adapter": "*",
+    "@loams-plugins/plugin-glitchtip-adapter": "*",
+    "@loams-plugins/plugin-itsaplan-adapter": "*",
+    "@loams-plugins/plugin-langfuse-adapter": "*",
+    "@loams-plugins/plugin-loams-adapter": "*",
+    "@loams-plugins/plugin-matomo-adapter": "*",
+    "@loams-plugins/plugin-openpanel-adapter": "*",
+    "@loams-plugins/plugin-store": "*",
+    "@loams-plugins/plugin-superset-adapter": "*",
+    "@loams-plugins/plugin-zulip-adapter": "*",
+    "@loams-plugins/types": "*",
+    "cordis": "^4.0.0-rc.10"
+  }
+}

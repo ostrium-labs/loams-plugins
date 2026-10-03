@@ -1,0 +1,25 @@
+{
+  "//": "Solution-style config for `tsc -b`. dashboard-ui is intentionally absent: it is a noEmit, non-composite app built by `vp build` and typechecked by `vp check`. `packages/core` sits after every package it composes (store, dashboard-spec, upstream-http) and before `apps/server`, which composes it. The upstream adapter packages (zulip, forgejo, langfuse, openpanel, glitchtip, matomo, itsaplan) each declare `references` to `plugin-upstream-http` and `core`, so they are listed after both of those; `apps/server` stays last because it composes all of them.",
+  "files": [],
+  "references": [
+    { "path": "packages/types" },
+    { "path": "packages/plugin-upstream-http" },
+    { "path": "packages/plugin-store" },
+    { "path": "packages/plugin-data" },
+    { "path": "packages/plugin-dashboard-spec" },
+    { "path": "packages/plugin-echarts-render" },
+    { "path": "packages/plugin-flint" },
+    { "path": "packages/plugin-superset-adapter" },
+    { "path": "packages/plugin-agent-tools" },
+    { "path": "packages/core" },
+    { "path": "packages/plugin-zulip-adapter" },
+    { "path": "packages/plugin-forgejo-adapter" },
+    { "path": "packages/plugin-langfuse-adapter" },
+    { "path": "packages/plugin-openpanel-adapter" },
+    { "path": "packages/plugin-glitchtip-adapter" },
+    { "path": "packages/plugin-matomo-adapter" },
+    { "path": "packages/plugin-itsaplan-adapter" },
+    { "path": "packages/plugin-loams-adapter" },
+    { "path": "apps/server" }
+  ]
+}

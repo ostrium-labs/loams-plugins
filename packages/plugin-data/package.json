@@ -1,0 +1,11 @@
+{
+  "name": "@loams-plugins/plugin-data",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@loams-plugins/plugin-superset-adapter": "*",
+    "cordis": "^4.0.0-rc.10"
+  }
+}

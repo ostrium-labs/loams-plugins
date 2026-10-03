@@ -1,0 +1,28 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "lib",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*"],
+  "references": [
+    {
+      "path": "../types"
+    },
+    {
+      "path": "../plugin-store"
+    },
+    {
+      "path": "../plugin-dashboard-spec"
+    },
+    {
+      "path": "../plugin-superset-adapter"
+    },
+    {
+      "path": "../plugin-echarts-render"
+    },
+    {
+      "path": "../plugin-flint"
+    }
+  ]
+}
