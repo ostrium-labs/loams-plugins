@@ -31,17 +31,17 @@ pagination.
 
 ## The table
 
-| id          | upstream        | required env                                                      | optional env                                                                                    | auto-enables | loader in package?     |
-| ----------- | --------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------ | ---------------------- |
-| `superset`  | Apache Superset | — (`alwaysOn`)                                                    | `SUPERSET_URL`, `SUPERSET_USER`, `SUPERSET_PASS`                                                | n/a          | n/a — attached at boot |
-| `zulip`     | Zulip           | `ZULIP_URL`, `ZULIP_EMAIL`, `ZULIP_API_KEY`                       | `ZULIP_TIMEOUT_MS`, `ZULIP_RATE_LIMIT_FLOOR`, `ZULIP_MAX_PAGES`                                 | yes          | yes                    |
-| `forgejo`   | Forgejo         | `FORGEJO_URL`, `FORGEJO_TOKEN`                                    | `FORGEJO_TIMEOUT_MS`, `FORGEJO_CONCURRENCY`, `FORGEJO_CACHE_TTL_MS`, `FORGEJO_LIMIT`            | yes          | yes                    |
-| `matomo`    | Matomo 5        | `MATOMO_URL`, `MATOMO_API_TOKEN`                                  | `MATOMO_TIMEOUT_MS`, `MATOMO_DEFAULT_ROW_LIMIT`, `MATOMO_DEFAULT_PERIOD`, `MATOMO_DEFAULT_DATE` | yes          | yes                    |
-| `itsaplan`  | It's a Plan     | `ITSAPLAN_URL`, `ITSAPLAN_API_KEY`                                | `ITSAPLAN_TIMEOUT_MS`                                                                           | yes          | yes                    |
-| `loams`     | Loams           | `LOAMS_URL`                                                       | `LOAMS_NAMESPACE`, `LOAMS_TOKEN`, `LOAMS_ALLOW_SQL`, `LOAMS_TIMEOUT_MS`                         | yes          | yes                    |
-| `langfuse`  | Langfuse        | `LANGFUSE_URL`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`      | `LANGFUSE_TIMEOUT_MS`                                                                           | **no**       | **no**                 |
-| `openpanel` | OpenPanel       | `OPENPANEL_URL`, `OPENPANEL_CLIENT_ID`, `OPENPANEL_CLIENT_SECRET` | `OPENPANEL_API_PREFIX`, `OPENPANEL_FUNNEL_STEP_ENCODING`, `OPENPANEL_TIMEOUT_MS`                | **no**       | **no**                 |
-| `glitchtip` | GlitchTip       | `GLITCHTIP_URL`, `GLITCHTIP_TOKEN`                                | `GLITCHTIP_TIMEOUT_MS`                                                                          | **no**       | **no**                 |
+| id              | upstream        | required env                                                      | optional env                                                                                    | auto-enables | loader in package?     |
+| --------------- | --------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------ | ---------------------- |
+| `control-plane` | Apache Superset | — (`alwaysOn`)                                                    | `SUPERSET_URL`, `SUPERSET_USER`, `SUPERSET_PASS`                                                | n/a          | n/a — attached at boot |
+| `zulip`         | Zulip           | `ZULIP_URL`, `ZULIP_EMAIL`, `ZULIP_API_KEY`                       | `ZULIP_TIMEOUT_MS`, `ZULIP_RATE_LIMIT_FLOOR`, `ZULIP_MAX_PAGES`                                 | yes          | yes                    |
+| `forgejo`       | Forgejo         | `FORGEJO_URL`, `FORGEJO_TOKEN`                                    | `FORGEJO_TIMEOUT_MS`, `FORGEJO_CONCURRENCY`, `FORGEJO_CACHE_TTL_MS`, `FORGEJO_LIMIT`            | yes          | yes                    |
+| `matomo`        | Matomo 5        | `MATOMO_URL`, `MATOMO_API_TOKEN`                                  | `MATOMO_TIMEOUT_MS`, `MATOMO_DEFAULT_ROW_LIMIT`, `MATOMO_DEFAULT_PERIOD`, `MATOMO_DEFAULT_DATE` | yes          | yes                    |
+| `itsaplan`      | It's a Plan     | `ITSAPLAN_URL`, `ITSAPLAN_API_KEY`                                | `ITSAPLAN_TIMEOUT_MS`                                                                           | yes          | yes                    |
+| `loams`         | Loams           | `LOAMS_URL`                                                       | `LOAMS_NAMESPACE`, `LOAMS_TOKEN`, `LOAMS_ALLOW_SQL`, `LOAMS_TIMEOUT_MS`                         | yes          | yes                    |
+| `langfuse`      | Langfuse        | `LANGFUSE_URL`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`      | `LANGFUSE_TIMEOUT_MS`                                                                           | **no**       | **no**                 |
+| `openpanel`     | OpenPanel       | `OPENPANEL_URL`, `OPENPANEL_CLIENT_ID`, `OPENPANEL_CLIENT_SECRET` | `OPENPANEL_API_PREFIX`, `OPENPANEL_FUNNEL_STEP_ENCODING`, `OPENPANEL_TIMEOUT_MS`                | **no**       | **no**                 |
+| `glitchtip`     | GlitchTip       | `GLITCHTIP_URL`, `GLITCHTIP_TOKEN`                                | `GLITCHTIP_TIMEOUT_MS`                                                                          | **no**       | **no**                 |
 
 The catalog lives in `apps/server/src/plugin-catalog.ts`; that file is the single
 place the auto-enable policy exists.
@@ -95,14 +95,19 @@ worth an `error`.
 
 ## Per upstream
 
-### Superset (`alwaysOn`, `order: 1`)
+### Control plane (`alwaysOn`, `order: 1`)
+
+The plugin id is `control-plane` and the client is
+`@loams-plugins/plugin-control-plane`. The upstream it speaks is **Apache
+Superset** over its REST API, so the env prefix stays `SUPERSET_` and the base
+URL is still `/api/v1` — the id is this project's naming, the wire is Superset's.
 
 Supplied by the repository as a **mock** MSW server on `SUPERSET_PORT` (default
 `8088`) for local development; point `SUPERSET_URL` at a real deployment.
 
 It is `alwaysOn` for the same reason the dashboard is, and by the mechanism
-`host.ts` documents: Superset is attached on the **root context at boot** (the
-original `/api/*` routes read `ctx.superset` directly), so a console toggle
+`host.ts` documents: the service is attached on the **root context at boot** (the
+original `/api/*` routes read `ctx.controlPlane` directly), so a console toggle
 could not unload it. A toggle that reports success while nothing changes is
 worse than no toggle, so the toggle is disabled instead.
 

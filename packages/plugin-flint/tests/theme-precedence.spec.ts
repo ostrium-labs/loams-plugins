@@ -18,7 +18,7 @@ const PBI_PALETTE_HEAD = "#118dff";
 
 function makeService(): FlintService {
   const ctx = new Context();
-  ctx.provide("superset", {});
+  ctx.provide("controlPlane", {});
   return new FlintService(ctx);
 }
 

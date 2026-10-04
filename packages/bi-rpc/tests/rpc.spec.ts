@@ -24,7 +24,7 @@ import { RowSchema } from "../src/gen/bi/v1/data_pb.js";
 function makeCtx(overrides: Partial<RpcContext> = {}): RpcContext {
   const noop = () => {};
   return {
-    superset: {
+    controlPlane: {
       listDatasets: async () => ({ result: [{ id: 1, table_name: "sales" }] }),
       describeDataset: async () => ({
         id: 7,
@@ -72,8 +72,8 @@ function rowValues(row: { values: Record<string, StructValueMessage> }): Record<
 describe("DataService.Query value encoding", () => {
   it("preserves number, string, boolean, and null column types", async () => {
     const ctx = makeCtx({
-      superset: {
-        ...makeCtx().superset,
+      controlPlane: {
+        ...makeCtx().controlPlane,
         queryData: async () => ({
           rowcount: 1,
           data: [{ n: 42, s: "hello", b: true, nul: null }],
@@ -92,8 +92,8 @@ describe("DataService.Query value encoding", () => {
 
   it("serializes a Date column as its ISO string rather than a number", async () => {
     const ctx = makeCtx({
-      superset: {
-        ...makeCtx().superset,
+      controlPlane: {
+        ...makeCtx().controlPlane,
         queryData: async () => ({ data: [{ when: new Date("2024-03-01T00:00:00.000Z") }] }),
       },
     });
@@ -103,8 +103,8 @@ describe("DataService.Query value encoding", () => {
 
   it("preserves a nested JSON column as JSON instead of stringifying it", async () => {
     const ctx = makeCtx({
-      superset: {
-        ...makeCtx().superset,
+      controlPlane: {
+        ...makeCtx().controlPlane,
         queryData: async () => ({ data: [{ agg: { sum: 3 } }] }),
       },
     });
@@ -114,8 +114,8 @@ describe("DataService.Query value encoding", () => {
 
   it("unwraps the { result: [{ data }] } envelope", async () => {
     const ctx = makeCtx({
-      superset: {
-        ...makeCtx().superset,
+      controlPlane: {
+        ...makeCtx().controlPlane,
         queryData: async () => ({ result: [{ data: [{ a: 1 }, { a: 2 }] }] }),
       },
     });
@@ -125,8 +125,8 @@ describe("DataService.Query value encoding", () => {
 
   it("unwraps a bare array payload", async () => {
     const ctx = makeCtx({
-      superset: {
-        ...makeCtx().superset,
+      controlPlane: {
+        ...makeCtx().controlPlane,
         queryData: async () => [{ a: 1 }],
       },
     });

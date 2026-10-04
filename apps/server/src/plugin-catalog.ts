@@ -91,25 +91,36 @@ function compact(config: Record<string, unknown>): Record<string, unknown> {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Superset                                                                    */
+/* Control plane                                                               */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Apache Superset, which ships no manifest of its own.
+ * The control-plane client (`@loams-plugins/plugin-control-plane`), which ships no
+ * manifest of its own.
+ *
+ * The plugin identity is "control plane", but the upstream it actually speaks to is
+ * Apache Superset over its REST API, so `upstream` names Superset and `envPrefix`
+ * stays `SUPERSET` -- both are facts about the wire, not about this project's naming.
+ * Renaming them would misdescribe the protocol.
  *
  * It is `alwaysOn` for the same reason the dashboard is, and the mechanism is the
- * one `host.ts` documents: Superset is attached on the root context at boot (the
- * thirteen original `/api/*` routes read `ctx.superset` directly), so a console
+ * one `host.ts` documents: the service is attached on the root context at boot (the
+ * thirteen original `/api/*` routes read `ctx.controlPlane` directly), so a console
  * toggle could not unload it. A toggle that reports success while nothing changes
  * is worse than no toggle, so the toggle is disabled instead.
+ *
+ * Because it is `alwaysOn`, `PluginRegistry` ignores any persisted `plugin_state` row
+ * for it (`registry.ts` only consults persisted state when `alwaysOn` is not set), so
+ * the id change costs no stored toggle state.
  */
-export const SUPERSET_MANIFEST: PluginManifest = {
-  id: "superset",
-  name: "Superset",
-  description: "The BI warehouse this dashboard reads from: datasets, charts and query results.",
+export const CONTROL_PLANE_MANIFEST: PluginManifest = {
+  id: "control-plane",
+  name: "Control Plane",
+  description:
+    "The BI warehouse this dashboard reads from: datasets, charts and query results, over the Superset-compatible control-plane API.",
   version: "1.0.0",
   category: "core",
-  uiPath: "/plugins/superset",
+  uiPath: "/plugins/control-plane",
   order: 1,
   alwaysOn: true,
   defaultEnabled: true,
@@ -339,7 +350,7 @@ function refusingLoader(message: string): PluginLoader {
 export function planPluginCatalog(env: Env = process.env): CatalogPlan {
   const entries: CatalogEntryPlan[] = [
     // Always on and attached at boot, so there is no loader and no env gate.
-    { manifest: SUPERSET_MANIFEST, missing: [] },
+    { manifest: CONTROL_PLANE_MANIFEST, missing: [] },
     ...ENTRIES.map((entry) => {
       const missing = missingEnv(env, entry.requiredEnv);
       const usable = missing.length === 0;

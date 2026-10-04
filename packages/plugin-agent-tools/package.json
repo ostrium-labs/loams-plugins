@@ -5,11 +5,11 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "dependencies": {
+    "@loams-plugins/plugin-control-plane": "*",
     "@loams-plugins/plugin-dashboard-spec": "*",
     "@loams-plugins/plugin-echarts-render": "*",
     "@loams-plugins/plugin-flint": "*",
     "@loams-plugins/plugin-store": "*",
-    "@loams-plugins/plugin-superset-adapter": "*",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "cordis": "^4.0.0-rc.10",
     "uuid": "^11.0.0"

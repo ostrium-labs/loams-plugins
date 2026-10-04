@@ -13,7 +13,7 @@ export interface SupersetMetric {
   verbose_name?: string;
 }
 
-export interface SupersetDataset {
+export interface ControlPlaneDataset {
   id: number;
   table_name: string;
   schema: string;

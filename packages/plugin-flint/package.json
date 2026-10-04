@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "dependencies": {
-    "@loams-plugins/plugin-superset-adapter": "*",
+    "@loams-plugins/plugin-control-plane": "*",
     "cordis": "^4.0.0-rc.10",
     "flint-chart": "~0.5.1"
   }

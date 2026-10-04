@@ -5,7 +5,7 @@ import type { Widget } from "@loams-plugins/types";
 // Re-declaring them locally would conflict with the owning packages.
 import "@loams-plugins/plugin-store";
 import "@loams-plugins/plugin-dashboard-spec";
-import "@loams-plugins/plugin-superset-adapter";
+import "@loams-plugins/plugin-control-plane";
 import "@loams-plugins/plugin-echarts-render";
 import "@loams-plugins/plugin-flint";
 
@@ -23,7 +23,7 @@ declare module "cordis" {
 }
 
 export class AgentToolsService extends Service {
-  static inject = ["dashboard", "data", "render", "superset", "flint", "store"];
+  static inject = ["dashboard", "data", "render", "controlPlane", "flint", "store"];
 
   constructor(ctx: Context) {
     super(ctx, "agentTools");
@@ -39,7 +39,7 @@ export class AgentToolsService extends Service {
           properties: {},
         },
         handler: async () => {
-          return await this.ctx.superset.listDatasets();
+          return await this.ctx.controlPlane.listDatasets();
         },
       },
       {
@@ -53,7 +53,7 @@ export class AgentToolsService extends Service {
           required: ["id"],
         },
         handler: async ({ id }) => {
-          return await this.ctx.superset.describeDataset(id);
+          return await this.ctx.controlPlane.describeDataset(id);
         },
       },
       {

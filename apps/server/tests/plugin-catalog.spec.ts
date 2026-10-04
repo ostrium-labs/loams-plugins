@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vite-plus/test";
 import { Context, Service } from "cordis";
 import { createHarness, type Harness } from "../../../packages/core/tests/helpers.js";
 import { DASHBOARD_MANIFEST, dashboardLoader, mountCoreApi } from "@loams-plugins/core";
-import type { PluginStatus } from "@loams-plugins/core";
+import type { PluginStatus, RouteRequest } from "@loams-plugins/core";
 import { planPluginCatalog, registerPluginCatalog, type Env } from "../src/plugin-catalog.js";
 
 /**
@@ -43,7 +43,13 @@ const FULL_ENV: Env = {
 /** Console order, as the registry sorts it: always-on, then `order`, then name. */
 const FRESH_CHECKOUT_INVENTORY = [
   { id: "dashboard", uiPath: "/", enabled: true, alwaysOn: true, skills: 3 },
-  { id: "superset", uiPath: "/plugins/superset", enabled: true, alwaysOn: true, skills: 0 },
+  {
+    id: "control-plane",
+    uiPath: "/plugins/control-plane",
+    enabled: true,
+    alwaysOn: true,
+    skills: 0,
+  },
   // `order` 30 is shared by langfuse and zulip, so name breaks the tie.
   { id: "langfuse", uiPath: "/plugins/langfuse", enabled: false, alwaysOn: false, skills: 8 },
   { id: "zulip", uiPath: "/plugins/zulip", enabled: false, alwaysOn: false, skills: 7 },
@@ -286,7 +292,7 @@ describe("upstream plugin catalog", () => {
               name: "probe:ping",
               method: "GET",
               match: "/probe/ping",
-              handler: ({ sendJson }: never) => {
+              handler: ({ sendJson }: RouteRequest) => {
                 handled += 1;
                 sendJson(200, { pong: true });
                 return true;

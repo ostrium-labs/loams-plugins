@@ -60,7 +60,8 @@ licence could not be verified.
 Upstream services consumed over HTTP
 ---------------------------------------------------------------------------
 
-The adapters in `packages/plugin-*-adapter/` talk to third-party services as
+The adapters in `packages/plugin-*-adapter/`, together with
+`packages/plugin-control-plane/`, talk to third-party services as
 clients. No source code from any of the following projects is vendored,
 redistributed, linked or embedded in this repository; only their HTTP APIs are
 called. Because no code from them is shipped, no copyleft obligation is
@@ -75,6 +76,12 @@ any obligation arises:
 
 The remaining upstreams (Apache Superset, Zulip, Langfuse, GlitchTip) are
 reached the same way, over HTTP only.
+
+Note on naming: `packages/plugin-control-plane/` is this repository's name for the
+client that speaks **Apache Superset's** REST API, so Superset is still the
+upstream product named above. The plugin id (`control-plane`) is this project's
+naming; the wire is Superset's. The `SUPERSET_*` environment variables and the
+`SUPERSET` `envPrefix` describe that same wire and are unchanged.
 
 Note on `loams-dev`: Loams is Apache-2.0, and this adapter calls it exactly as
 it calls any other upstream — over HTTP, with no code shared. The proprietary

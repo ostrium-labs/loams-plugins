@@ -54,6 +54,17 @@ export interface PluginManifest {
    * in a guard derived from this field. The check is per request rather than per
    * enable, because a session created before a plugin was deployed cannot have been
    * granted that plugin's scopes; see `evaluateScopeGate`.
+   *
+   * DEVIATION FROM THE SF1 CONTRACT, deliberate. Every other field of this interface is
+   * byte-for-byte the SF1 `PluginManifest`. This one field is an additive extension and
+   * is kept because it is load-bearing, not decorative: `PluginHost._scopeGuard` builds a
+   * per-route guard from it, `PluginRegistry` and the A2A layer both call
+   * `evaluateScopeGate` with it, and `PluginStatus` exposes the `blocked` state and
+   * `missingScopes` that the console renders from it. Dropping the field would delete
+   * request-time scope enforcement for plugin routes and skills outright. Additive means
+   * a host built against SF1 still accepts every manifest this repo produces; it just
+   * ignores a scope requirement it has no implementation for, so such a manifest must
+   * not be treated as enforced on that host.
    */
   requiredScopes?: string[];
   upstream?: { product: string; envPrefix?: string };

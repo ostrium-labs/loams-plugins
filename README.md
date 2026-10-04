@@ -42,6 +42,13 @@ A plugin declares itself with a `PluginManifest` (`types.ts`): `id`, `name`,
 `order`, `defaultEnabled`, `requiredScopes`, `upstream` and an `agent` block
 carrying the skills it advertises.
 
+This matches the SF1 `PluginManifest` field for field, with one deliberate
+addition: `requiredScopes`, described under [`requiredScopes`](#requiredscopes)
+below. It is additive rather than a rename, so a host built against SF1 still
+accepts every manifest this repository produces — but such a host has no
+implementation for it, so a manifest that relies on it is only enforced where
+`requiredScopes` is implemented. `PluginAgentSkill` matches SF1 exactly.
+
 `PluginStatus` is the manifest plus live state (`enabled`, `state`, `error`,
 `missingScopes`, `changedAt`) and is what `GET /api/plugins` returns. The two
 types are deliberately separate so a UI cannot write `state` back into the
@@ -125,18 +132,18 @@ The full model, including where admin gating and service tokens sit, is in
 Ten adapters are registered at boot. The first two are `alwaysOn`: the host loads
 them, the registry refuses to disable them, and the console toggle is disabled.
 
-| id          | reads                                                                | required env                                                      | always on                      |
-| ----------- | -------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------ |
-| `dashboard` | this console's own dashboards, widgets and their data                | —                                                                 | yes (pinned first, `order: 0`) |
-| `superset`  | an Apache Superset deployment — datasets, charts, query results      | —                                                                 | yes (`order: 1`)               |
-| `zulip`     | Zulip realm: channels, topics, message search, user metrics          | `ZULIP_URL`, `ZULIP_EMAIL`, `ZULIP_API_KEY`                       | no                             |
-| `forgejo`   | Forgejo instance: repositories, issues, PRs, commits, contributors   | `FORGEJO_URL`, `FORGEJO_TOKEN`                                    | no                             |
-| `langfuse`  | Langfuse LLM observability: observations, metrics, scores            | `LANGFUSE_URL`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`      | no                             |
-| `openpanel` | OpenPanel product analytics: traffic, funnels, retention, events     | `OPENPANEL_URL`, `OPENPANEL_CLIENT_ID`, `OPENPANEL_CLIENT_SECRET` | no                             |
-| `glitchtip` | GlitchTip error/performance monitoring: issues, events, releases     | `GLITCHTIP_URL`, `GLITCHTIP_TOKEN`                                | no                             |
-| `matomo`    | Matomo 5 web analytics: visits, actions, referrers, devices, goals   | `MATOMO_URL`, `MATOMO_API_TOKEN`                                  | no                             |
-| `itsaplan`  | It's a Plan delivery analytics: issues, throughput, burnup, activity | `ITSAPLAN_URL`, `ITSAPLAN_API_KEY`                                | no                             |
-| `loams`     | a Loams deployment: collections, hybrid retrieval, documents, counts | `LOAMS_URL`                                                       | no                             |
+| id              | reads                                                                                      | required env                                                      | always on                      |
+| --------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------ |
+| `dashboard`     | this console's own dashboards, widgets and their data                                      | —                                                                 | yes (pinned first, `order: 0`) |
+| `control-plane` | an Apache Superset deployment over the control-plane API — datasets, charts, query results | —                                                                 | yes (`order: 1`)               |
+| `zulip`         | Zulip realm: channels, topics, message search, user metrics                                | `ZULIP_URL`, `ZULIP_EMAIL`, `ZULIP_API_KEY`                       | no                             |
+| `forgejo`       | Forgejo instance: repositories, issues, PRs, commits, contributors                         | `FORGEJO_URL`, `FORGEJO_TOKEN`                                    | no                             |
+| `langfuse`      | Langfuse LLM observability: observations, metrics, scores                                  | `LANGFUSE_URL`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`      | no                             |
+| `openpanel`     | OpenPanel product analytics: traffic, funnels, retention, events                           | `OPENPANEL_URL`, `OPENPANEL_CLIENT_ID`, `OPENPANEL_CLIENT_SECRET` | no                             |
+| `glitchtip`     | GlitchTip error/performance monitoring: issues, events, releases                           | `GLITCHTIP_URL`, `GLITCHTIP_TOKEN`                                | no                             |
+| `matomo`        | Matomo 5 web analytics: visits, actions, referrers, devices, goals                         | `MATOMO_URL`, `MATOMO_API_TOKEN`                                  | no                             |
+| `itsaplan`      | It's a Plan delivery analytics: issues, throughput, burnup, activity                       | `ITSAPLAN_URL`, `ITSAPLAN_API_KEY`                                | no                             |
+| `loams`         | a Loams deployment: collections, hybrid retrieval, documents, counts                       | `LOAMS_URL`                                                       | no                             |
 
 An adapter is auto-enabled at boot **only if its required variables are present**
 and its own manifest opts in with `defaultEnabled`. A fresh checkout therefore
@@ -211,22 +218,23 @@ it.` That is a supported state on a fresh checkout, not a failure.
 
 ## Package layout
 
-| package                                    | what it is                                                                        |
-| ------------------------------------------ | --------------------------------------------------------------------------------- |
-| `@loams-plugins/root`                      | the workspace root; scripts and toolchain config                                  |
-| `@loams-plugins/core`                      | the plugin platform: types, registry, host, bus, router, A2A, api, `auth/`, `ui/` |
-| `@loams-plugins/types`                     | shared zod schemas (`PluginStatus`, theme specs)                                  |
-| `@loams-plugins/plugin-upstream-http`      | the shared HTTP client every adapter builds on                                    |
-| `@loams-plugins/plugin-store`              | persistence for dashboards, widgets and plugin enable flags                       |
-| `@loams-plugins/plugin-data`               | widget data fetching                                                              |
-| `@loams-plugins/plugin-echarts-render`     | widget → ECharts option compiler                                                  |
-| `@loams-plugins/plugin-flint`              | theme resolution                                                                  |
-| `@loams-plugins/plugin-dashboard-spec`     | dashboard document schema                                                         |
-| `@loams-plugins/plugin-agent-tools`        | agent tooling service                                                             |
-| `@loams-plugins/plugin-<upstream>-adapter` | one read-only adapter per upstream                                                |
-| `@loams-plugins/dashboard-ui`              | the console SPA                                                                   |
-| `@loams-plugins/bi-rpc`                    | ConnectRPC bindings for the `bi.v1` contract                                      |
-| `@loams-plugins/server`                    | `apps/server`: boot order, catalog, mock upstream, HTTP server                    |
+| package                                    | what it is                                                                                         |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `@loams-plugins/root`                      | the workspace root; scripts and toolchain config                                                   |
+| `@loams-plugins/core`                      | the plugin platform: types, registry, host, bus, router, A2A, api, `auth/`, `ui/`                  |
+| `@loams-plugins/types`                     | shared zod schemas (`PluginStatus`, theme specs)                                                   |
+| `@loams-plugins/plugin-control-plane`      | the control-plane client (`@loams-plugins/plugin-control-plane` speaks Apache Superset's REST API) |
+| `@loams-plugins/plugin-upstream-http`      | the shared HTTP client every adapter builds on                                                     |
+| `@loams-plugins/plugin-store`              | persistence for dashboards, widgets and plugin enable flags                                        |
+| `@loams-plugins/plugin-data`               | widget data fetching                                                                               |
+| `@loams-plugins/plugin-echarts-render`     | widget → ECharts option compiler                                                                   |
+| `@loams-plugins/plugin-flint`              | theme resolution                                                                                   |
+| `@loams-plugins/plugin-dashboard-spec`     | dashboard document schema                                                                          |
+| `@loams-plugins/plugin-agent-tools`        | agent tooling service                                                                              |
+| `@loams-plugins/plugin-<upstream>-adapter` | one read-only adapter per upstream                                                                 |
+| `@loams-plugins/dashboard-ui`              | the console SPA                                                                                    |
+| `@loams-plugins/bi-rpc`                    | ConnectRPC bindings for the `bi.v1` contract                                                       |
+| `@loams-plugins/server`                    | `apps/server`: boot order, catalog, mock upstream, HTTP server                                     |
 
 ### About `bi-rpc` and the `bi.v1` namespace
 

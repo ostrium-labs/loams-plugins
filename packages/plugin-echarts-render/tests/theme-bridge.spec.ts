@@ -41,7 +41,7 @@ const snapshot = (value: unknown): unknown => JSON.parse(JSON.stringify(value));
 
 function harness() {
   const ctx = new Context();
-  ctx.provide("superset", {});
+  ctx.provide("controlPlane", {});
   // `new FlintService(ctx)` registers itself on the context it is given, which
   // is why this harness does not `provide` it again.
   const flint = new FlintService(ctx);

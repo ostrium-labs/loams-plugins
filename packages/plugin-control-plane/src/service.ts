@@ -1,17 +1,17 @@
 import { Context, Service } from "cordis";
-import { SupersetConfig, SupersetDataset } from "./types.js";
+import { ControlPlaneConfig, ControlPlaneDataset } from "./types.js";
 
-export class SupersetAdapterService extends Service {
+export class ControlPlaneService extends Service {
   static inject = [];
 
   private _token: string | null = null;
   private _tokenExpiry: number = 0;
   private _csrfToken: string | null = null;
-  private _datasetCache: Map<number, SupersetDataset> = new Map();
-  public config: SupersetConfig;
+  private _datasetCache: Map<number, ControlPlaneDataset> = new Map();
+  public config: ControlPlaneConfig;
 
-  constructor(ctx: Context, config: SupersetConfig) {
-    super(ctx, "superset");
+  constructor(ctx: Context, config: ControlPlaneConfig) {
+    super(ctx, "controlPlane");
     this.config = config;
   }
 
@@ -91,7 +91,7 @@ export class SupersetAdapterService extends Service {
     return response.json();
   }
 
-  async describeDataset(id: number): Promise<SupersetDataset> {
+  async describeDataset(id: number): Promise<ControlPlaneDataset> {
     if (this._datasetCache.has(id)) {
       return this._datasetCache.get(id)!;
     }
@@ -180,6 +180,6 @@ export class SupersetAdapterService extends Service {
 
 declare module "cordis" {
   interface Context {
-    superset: SupersetAdapterService;
+    controlPlane: ControlPlaneService;
   }
 }

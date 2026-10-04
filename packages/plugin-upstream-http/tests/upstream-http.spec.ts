@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vite-plus/test";
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from "vite-plus/test";
 import {
   UpstreamClient,
   UpstreamError,
@@ -6,6 +6,20 @@ import {
   type QueryValue,
   type UpstreamAuth,
 } from "../src/index.js";
+
+/**
+ * A `fetch` spy. Declared as `Mock<typeof fetch>` (via `vi.fn<typeof fetch>`) so
+ * that `spy.mock.calls[i]` carries fetch's real parameter tuple. A spy built
+ * from a zero-argument implementation types `calls` as `[][]`, which made every
+ * `calls[i][1]` read below a type error even though the client really does pass
+ * a `RequestInit` at runtime.
+ */
+type FetchSpy = Mock<typeof fetch>;
+
+/** The `RequestInit` a fetch spy was called with. */
+function initOf(spy: FetchSpy, index = 0): RequestInit {
+  return spy.mock.calls[index]?.[1] ?? {};
+}
 
 /**
  * This module is the auth/query/error plumbing every adapter depends on, so its
@@ -60,23 +74,23 @@ describe("UpstreamClient auth", () => {
   const base = "http://upstream.test";
 
   it("sends Bearer auth", async () => {
-    const fetchSpy = vi.fn(async () => jsonResponse({ ok: true }));
+    const fetchSpy = vi.fn<typeof fetch>(async () => jsonResponse({ ok: true }));
     vi.stubGlobal("fetch", fetchSpy);
     const client = new UpstreamClient({ baseUrl: base, auth: { kind: "bearer", token: "t0k" } });
     await client.get("/x");
-    const headers = (fetchSpy.mock.calls[0]![1] as RequestInit).headers as Headers;
+    const headers = initOf(fetchSpy, 0).headers as Headers;
     expect(headers.get("Authorization")).toBe("Bearer t0k");
   });
 
   it("sends Basic auth for Zulip's email:api_key form", async () => {
-    const fetchSpy = vi.fn(async () => jsonResponse({}));
+    const fetchSpy = vi.fn<typeof fetch>(async () => jsonResponse({}));
     vi.stubGlobal("fetch", fetchSpy);
     const client = new UpstreamClient({
       baseUrl: base,
       auth: { kind: "basic", username: "me@example.com", password: "abc123" },
     });
     await client.get("/api/v1/users");
-    const headers = (fetchSpy.mock.calls[0]![1] as RequestInit).headers as Headers;
+    const headers = initOf(fetchSpy, 0).headers as Headers;
     const decoded = Buffer.from(
       headers.get("Authorization")!.replace("Basic ", ""),
       "base64",
@@ -85,19 +99,19 @@ describe("UpstreamClient auth", () => {
   });
 
   it("sends a raw Authorization value for Forgejo's 'token <t>' scheme", async () => {
-    const fetchSpy = vi.fn(async () => jsonResponse({}));
+    const fetchSpy = vi.fn<typeof fetch>(async () => jsonResponse({}));
     vi.stubGlobal("fetch", fetchSpy);
     const client = new UpstreamClient({
       baseUrl: base,
       auth: { kind: "authorization-raw", value: "token sha1:abc" },
     });
     await client.get("/api/v1/repos/search");
-    const headers = (fetchSpy.mock.calls[0]![1] as RequestInit).headers as Headers;
+    const headers = initOf(fetchSpy, 0).headers as Headers;
     expect(headers.get("Authorization")).toBe("token sha1:abc");
   });
 
   it("puts a query-token credential in the URL, not the headers", async () => {
-    const fetchSpy = vi.fn(async () => jsonResponse({}));
+    const fetchSpy = vi.fn<typeof fetch>(async () => jsonResponse({}));
     vi.stubGlobal("fetch", fetchSpy);
     const client = new UpstreamClient({
       baseUrl: base,
@@ -106,7 +120,7 @@ describe("UpstreamClient auth", () => {
     await client.get("/index.php", { module: "API", method: "VisitsSummary.get" });
     const url = String(fetchSpy.mock.calls[0]![0]);
     expect(url).toContain("token_auth=secret");
-    const headers = (fetchSpy.mock.calls[0]![1] as RequestInit).headers as Headers;
+    const headers = initOf(fetchSpy, 0).headers as Headers;
     expect(headers.get("Authorization")).toBeNull();
   });
 
@@ -120,11 +134,11 @@ describe("UpstreamClient auth", () => {
   });
 
   it("lets per-call headers override the configured auth", async () => {
-    const fetchSpy = vi.fn(async () => jsonResponse({}));
+    const fetchSpy = vi.fn<typeof fetch>(async () => jsonResponse({}));
     vi.stubGlobal("fetch", fetchSpy);
     const client = new UpstreamClient({ baseUrl: base, auth: { kind: "bearer", token: "a" } });
     await client.request("GET", "/x", { headers: { Authorization: "Bearer b" } });
-    const headers = (fetchSpy.mock.calls[0]![1] as RequestInit).headers as Headers;
+    const headers = initOf(fetchSpy, 0).headers as Headers;
     expect(headers.get("Authorization")).toBe("Bearer b");
   });
 });
@@ -407,7 +421,7 @@ describe("UpstreamClient response observer", () => {
   it("leaves a request with no observer byte-for-byte unchanged", async () => {
     // The hook is purely additive: omitting it must not alter the URL, the
     // headers, the parsed result or the error behaviour.
-    const fetchSpy = vi.fn(async () => jsonResponse({ ok: true }));
+    const fetchSpy = vi.fn<typeof fetch>(async () => jsonResponse({ ok: true }));
     vi.stubGlobal("fetch", fetchSpy);
     const plain = new UpstreamClient({ baseUrl: base, auth: { kind: "bearer", token: "t" } });
 
@@ -416,7 +430,7 @@ describe("UpstreamClient response observer", () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
     expect(String(fetchSpy.mock.calls[0]![0])).toBe("http://upstream.test/x?a=1");
-    expect((fetchSpy.mock.calls[0]![1] as RequestInit).headers).toBeDefined();
+    expect(initOf(fetchSpy, 0).headers).toBeDefined();
   });
 });
 
@@ -439,17 +453,15 @@ describe("UpstreamClient url building", () => {
   });
 
   it("sets a JSON content type only when there is a body", async () => {
-    const fetchSpy = vi.fn(async () => jsonResponse({}));
+    const fetchSpy = vi.fn<typeof fetch>(async () => jsonResponse({}));
     vi.stubGlobal("fetch", fetchSpy);
     const client = new UpstreamClient({ baseUrl: base, auth: { kind: "none" } });
     await client.get("/x");
-    expect(
-      ((fetchSpy.mock.calls[0]![1] as RequestInit).headers as Headers).get("Content-Type"),
-    ).toBeNull();
+    expect((initOf(fetchSpy, 0).headers as Headers).get("Content-Type")).toBeNull();
     await client.post("/x", { a: 1 });
-    const headers = (fetchSpy.mock.calls[1]![1] as RequestInit).headers as Headers;
+    const headers = initOf(fetchSpy, 1).headers as Headers;
     expect(headers.get("Content-Type")).toBe("application/json");
-    expect((fetchSpy.mock.calls[1]![1] as RequestInit).body).toBe('{"a":1}');
+    expect(initOf(fetchSpy, 1).body).toBe('{"a":1}');
     vi.unstubAllGlobals();
   });
 });

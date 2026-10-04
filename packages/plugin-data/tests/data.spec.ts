@@ -6,8 +6,8 @@ describe("DataService", () => {
   let ctx: Context;
   beforeEach(async () => {
     ctx = new Context();
-    ctx.provide("superset");
-    ctx.set("superset", { queryData: vi.fn().mockResolvedValue([{ a: 1 }]) });
+    ctx.provide("controlPlane");
+    ctx.set("controlPlane", { queryData: vi.fn().mockResolvedValue([{ a: 1 }]) });
     await ctx.plugin(DataService);
   });
 
@@ -19,12 +19,12 @@ describe("DataService", () => {
     const data2 = await ctx.data.fetchWidgetData(widget);
     expect(data2).toEqual([{ a: 1 }]);
 
-    expect(ctx.superset.queryData).toHaveBeenCalledTimes(1);
+    expect(ctx.controlPlane.queryData).toHaveBeenCalledTimes(1);
   });
 
   it("deduplicates in-flight requests", async () => {
     let resolveQuery: (v: any) => void;
-    ctx.superset.queryData = vi.fn().mockReturnValue(new Promise((r) => (resolveQuery = r)));
+    ctx.controlPlane.queryData = vi.fn().mockReturnValue(new Promise((r) => (resolveQuery = r)));
 
     const widget = { datasetId: "ds2" };
     const p1 = ctx.data.fetchWidgetData(widget);
@@ -34,13 +34,13 @@ describe("DataService", () => {
     const [d1, d2] = await Promise.all([p1, p2]);
     expect(d1).toEqual([{ b: 2 }]);
     expect(d2).toEqual([{ b: 2 }]);
-    expect(ctx.superset.queryData).toHaveBeenCalledTimes(1);
+    expect(ctx.controlPlane.queryData).toHaveBeenCalledTimes(1);
   });
 
   it("binds params", async () => {
     ctx.data.setParam("region", "US");
     await ctx.data.fetchWidgetData({ datasetId: "ds3" });
-    expect(ctx.superset.queryData).toHaveBeenCalledWith({
+    expect(ctx.controlPlane.queryData).toHaveBeenCalledWith({
       datasetId: "ds3",
       params: { region: "US" },
     });
@@ -51,6 +51,6 @@ describe("DataService", () => {
     await ctx.data.fetchWidgetData(widget);
     ctx.data.invalidate("ds4");
     await ctx.data.fetchWidgetData(widget);
-    expect(ctx.superset.queryData).toHaveBeenCalledTimes(2);
+    expect(ctx.controlPlane.queryData).toHaveBeenCalledTimes(2);
   });
 });

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
 import { Context } from "cordis";
+import { AgentBus, HttpRouter, type PluginManifest, type PluginRuntime } from "@loams-plugins/core";
 import {
   ZulipAdapterService,
   ZulipApiError,
@@ -12,6 +13,16 @@ import {
 import type { ZulipConfig, ZulipMessage, ZulipNarrowTerm } from "../src/types.js";
 
 type MockedFetch = ReturnType<typeof vi.fn<typeof fetch>>;
+
+/**
+ * `PluginLoader.skills` is handed a `PluginRuntime`. These loaders build their
+ * handler list from a literal and never read the runtime, but the contract
+ * requires one, so give them a real (empty) one rather than casting `undefined`.
+ */
+function runtimeFor(manifest: PluginManifest): PluginRuntime {
+  const ctx = new Context();
+  return { id: manifest.id, manifest, ctx, router: new HttpRouter(ctx), bus: new AgentBus(ctx) };
+}
 
 const BASE = "https://chat.example.test";
 
@@ -832,7 +843,9 @@ describe("zulip manifest", () => {
 
   it("pairs every declared skill with a loader handler", () => {
     const declared = (zulipManifest.agent?.skills ?? []).map((skill) => skill.id);
-    const handled = (zulipLoader.skills?.() ?? []).map((skill) => skill.id);
+    const handled = (zulipLoader.skills?.(runtimeFor(zulipManifest)) ?? []).map(
+      (skill) => skill.id,
+    );
     expect(handled).toEqual(declared);
   });
 });

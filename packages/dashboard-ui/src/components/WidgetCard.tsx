@@ -126,17 +126,14 @@ export const WidgetCard: React.FC<WidgetCardProps> = ({
 
           // Attach interaction listener for cross-widget filtering
           instanceRef.current.off("click");
-          instanceRef.current.on(
-            "click",
-            (params: { data?: Record<string, unknown>; name?: unknown }) => {
-              if (onParamChange) {
-                const filter = paramFilterFor(widget, params);
-                for (const [paramName, value] of Object.entries(filter)) {
-                  onParamChange(paramName, value);
-                }
+          instanceRef.current.on("click", (params: echarts.ECElementEvent) => {
+            if (onParamChange) {
+              const filter = paramFilterFor(widget, params);
+              for (const [paramName, value] of Object.entries(filter)) {
+                onParamChange(paramName, value);
               }
-            },
-          );
+            }
+          });
         }
       })
       .catch((err) => {

@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vite-plus/test";
 import { Context } from "cordis";
-import { SupersetAdapterService } from "../src/service.js";
+import { ControlPlaneService } from "../src/service.js";
 
-describe("SupersetAdapterService", () => {
+describe("ControlPlaneService", () => {
   let ctx: Context;
-  let service: SupersetAdapterService;
+  let service: ControlPlaneService;
 
   beforeEach(() => {
     ctx = new Context();
-    service = new SupersetAdapterService(ctx, {
+    service = new ControlPlaneService(ctx, {
       baseUrl: "http://localhost:8088",
       username: "admin",
       password: "admin_password",

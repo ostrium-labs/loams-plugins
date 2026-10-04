@@ -1,5 +1,5 @@
 {
-  "name": "@loams-plugins/plugin-superset-adapter",
+  "name": "@loams-plugins/plugin-control-plane",
   "version": "0.0.1",
   "type": "module",
   "main": "src/index.ts",

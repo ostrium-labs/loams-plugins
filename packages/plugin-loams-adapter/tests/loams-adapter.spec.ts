@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from "vite-plus/test";
 import { Context } from "cordis";
+import { AgentBus, HttpRouter, type PluginManifest, type PluginRuntime } from "@loams-plugins/core";
 import {
   LOAMS_API_PREFIX,
   LOAMS_DEFAULT_LIMIT,
@@ -13,7 +14,22 @@ import {
 } from "../src/service.js";
 import type { LoamsConfig, LoamsRetriever } from "../src/types.js";
 
-type MockedFetch = ReturnType<typeof vi.fn<typeof fetch>>;
+/**
+ * A `fetch` spy. `Mock<typeof fetch>` (rather than `ReturnType<typeof vi.fn<...>>`)
+ * keeps `mock.calls` typed as fetch's real parameter tuple, so reading the
+ * `RequestInit` off a call is checked instead of assumed.
+ */
+type MockedFetch = Mock<typeof fetch>;
+
+/**
+ * `PluginLoader.skills` is handed a `PluginRuntime`. These loaders build their
+ * handler list from a literal and never read the runtime, but the contract
+ * requires one, so give them a real (empty) one rather than casting `undefined`.
+ */
+function runtimeFor(manifest: PluginManifest): PluginRuntime {
+  const ctx = new Context();
+  return { id: manifest.id, manifest, ctx, router: new HttpRouter(ctx), bus: new AgentBus(ctx) };
+}
 
 const BASE = "http://loams.test:8080";
 const NS = "demo";
@@ -45,9 +61,9 @@ function bodyOf(fetchMock: MockedFetch, index = 0): Record<string, unknown> {
 function serviceWith(body: unknown, overrides: Partial<LoamsConfig> = {}, status = 200) {
   const ctx = new Context();
   const service = new LoamsAdapterService(ctx, config(overrides));
-  const fetchMock = vi.fn(async () => reply(body, status));
+  const fetchMock = vi.fn<typeof fetch>(async () => reply(body, status));
   vi.stubGlobal("fetch", fetchMock);
-  return { ctx, service, fetchMock: fetchMock as unknown as MockedFetch };
+  return { ctx, service, fetchMock: fetchMock };
 }
 
 const TEXT_RETRIEVER: LoamsRetriever = {
@@ -58,7 +74,7 @@ describe("base path and namespace interpolation", () => {
   beforeEach(() => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => reply({})),
+      vi.fn<typeof fetch>(async () => reply({})),
     );
   });
   afterEach(() => {
@@ -112,7 +128,7 @@ describe("namespace resolution", () => {
   beforeEach(() => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => reply({})),
+      vi.fn<typeof fetch>(async () => reply({})),
     );
   });
   afterEach(() => {
@@ -128,7 +144,7 @@ describe("namespace resolution", () => {
   it("refuses to guess a namespace when none is configured", async () => {
     const ctx = new Context();
     const service = new LoamsAdapterService(ctx, { baseUrl: BASE });
-    const fetchMock = vi.fn(async () => reply({}));
+    const fetchMock = vi.fn<typeof fetch>(async () => reply({}));
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(service.listCollections()).rejects.toThrow(LOAMS_NO_NAMESPACE_MESSAGE);
@@ -232,7 +248,7 @@ describe("/sql is refused unless explicitly opted in", () => {
   beforeEach(() => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => reply({ columns: [], rows: [], truncated: false })),
+      vi.fn<typeof fetch>(async () => reply({ columns: [], rows: [], truncated: false })),
     );
   });
   afterEach(() => {
@@ -282,7 +298,9 @@ describe("/sql is refused unless explicitly opted in", () => {
   });
 
   it("is not reachable from any skill", () => {
-    expect(loamsLoader.skills?.().map((skill) => skill.id)).not.toContain("sql");
+    expect(loamsLoader.skills?.(runtimeFor(loamsManifest)).map((skill) => skill.id)).not.toContain(
+      "sql",
+    );
     expect(loamsManifest.agent?.skills.map((skill) => skill.id)).not.toContain("sql");
   });
 });
@@ -310,7 +328,7 @@ describe("no request ever targets the code-deployment surface", () => {
 
   it("targets no live or Deploy path, sql opt-in included", async () => {
     for (const allowSql of [false, true]) {
-      const fetchMock = vi.fn(async () =>
+      const fetchMock = vi.fn<typeof fetch>(async () =>
         reply({ columns: [], rows: [], truncated: false, hits: [] }),
       );
       vi.stubGlobal("fetch", fetchMock);
@@ -517,7 +535,9 @@ describe("UpstreamError surfaces status and body", () => {
   it("falls back to the raw body when the error is not a Loams envelope", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => new Response("<html>502 Bad Gateway</html>", { status: 502 })),
+      vi.fn<typeof fetch>(
+        async () => new Response("<html>502 Bad Gateway</html>", { status: 502 }),
+      ),
     );
     const service = new LoamsAdapterService(new Context(), config());
     const err = (await service.listCollections().catch((e: unknown) => e)) as LoamsApiError;
@@ -530,7 +550,7 @@ describe("UpstreamError surfaces status and body", () => {
   it("reports liveness as false rather than throwing on a failing probe", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => new Response("", { status: 503 })),
+      vi.fn<typeof fetch>(async () => new Response("", { status: 503 })),
     );
     const service = new LoamsAdapterService(new Context(), config());
     await expect(service.health()).resolves.toBe(false);
@@ -540,7 +560,7 @@ describe("UpstreamError surfaces status and body", () => {
   it("reports liveness as true when both probes answer 2xx", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => new Response("", { status: 200 })),
+      vi.fn<typeof fetch>(async () => new Response("", { status: 200 })),
     );
     const service = new LoamsAdapterService(new Context(), config());
     await expect(service.health()).resolves.toBe(true);
@@ -593,7 +613,9 @@ describe("loams manifest", () => {
 
   it("pairs every declared skill with a loader handler", () => {
     const declared = (loamsManifest.agent?.skills ?? []).map((skill) => skill.id);
-    const handled = (loamsLoader.skills?.() ?? []).map((skill) => skill.id);
+    const handled = (loamsLoader.skills?.(runtimeFor(loamsManifest)) ?? []).map(
+      (skill) => skill.id,
+    );
     expect(declared.length).toBeGreaterThan(0);
     expect([...handled].sort()).toEqual([...declared].sort());
   });

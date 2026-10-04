@@ -13,6 +13,7 @@
     "@loams-plugins/bi-rpc": "*",
     "@loams-plugins/core": "*",
     "@loams-plugins/plugin-agent-tools": "*",
+    "@loams-plugins/plugin-control-plane": "*",
     "@loams-plugins/plugin-dashboard-spec": "*",
     "@loams-plugins/plugin-data": "*",
     "@loams-plugins/plugin-echarts-render": "*",
@@ -25,7 +26,6 @@
     "@loams-plugins/plugin-matomo-adapter": "*",
     "@loams-plugins/plugin-openpanel-adapter": "*",
     "@loams-plugins/plugin-store": "*",
-    "@loams-plugins/plugin-superset-adapter": "*",
     "@loams-plugins/plugin-zulip-adapter": "*",
     "@loams-plugins/types": "*",
     "cordis": "^4.0.0-rc.10"

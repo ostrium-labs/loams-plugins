@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
 import { Context } from "cordis";
+import { AgentBus, HttpRouter, type PluginManifest, type PluginRuntime } from "@loams-plugins/core";
 import { UpstreamError } from "@loams-plugins/plugin-upstream-http";
 import {
   ForgejoAdapterService,
@@ -11,6 +12,16 @@ import {
   parseTotalCount,
 } from "../src/service.js";
 import type { ForgejoConfig, ForgejoIssue, ForgejoRepository } from "../src/types.js";
+
+/**
+ * `PluginLoader.skills` is handed a `PluginRuntime`. These loaders build their
+ * handler list from a literal and never read the runtime, but the contract
+ * requires one, so give them a real (empty) one rather than casting `undefined`.
+ */
+function runtimeFor(manifest: PluginManifest): PluginRuntime {
+  const ctx = new Context();
+  return { id: manifest.id, manifest, ctx, router: new HttpRouter(ctx), bus: new AgentBus(ctx) };
+}
 
 const BASE = "https://git.example.test";
 
@@ -656,7 +667,9 @@ describe("forgejo manifest", () => {
 
   it("pairs every declared skill with a loader handler", () => {
     const declared = (forgejoManifest.agent?.skills ?? []).map((skill) => skill.id);
-    const handled = (forgejoLoader.skills?.() ?? []).map((skill) => skill.id);
+    const handled = (forgejoLoader.skills?.(runtimeFor(forgejoManifest)) ?? []).map(
+      (skill) => skill.id,
+    );
     expect(handled).toEqual(declared);
   });
 });
