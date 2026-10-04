@@ -210,17 +210,25 @@ export function composeChartOption(base: Record<string, unknown>, hasTheme: bool
  * on `params.data[fieldName]` (falling back to the series name) writes that
  * value into every param the interaction names.
  *
- * @param params The ECharts click payload. Only `data` and `name` are read.
+ * @param params The ECharts click payload (`ECElementEvent`). Only `data` and
+ * `name` are read. `data` is typed `unknown` rather than
+ * `Record<string, unknown>` because that is what ECharts actually delivers: a
+ * scalar or an array for most series. Only a plain object can carry the field
+ * names an interaction refers to, so anything else falls back to `name`.
  */
 export function paramFilterFor(
   widget: Widget,
-  params: { data?: Record<string, unknown>; name?: unknown },
+  params: { data?: unknown; name?: unknown },
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {};
+  const data =
+    typeof params?.data === "object" && params.data !== null && !Array.isArray(params.data)
+      ? (params.data as Record<string, unknown>)
+      : undefined;
   for (const inter of widget.interactions ?? []) {
     if (inter.on !== "click") continue;
     for (const [paramName, fieldName] of Object.entries(inter.set)) {
-      const value = params?.data?.[fieldName] ?? params?.name;
+      const value = data?.[fieldName] ?? params?.name;
       if (value) out[paramName] = value;
     }
   }

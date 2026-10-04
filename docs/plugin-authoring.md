@@ -61,9 +61,10 @@ Field by field:
 `alwaysOn` is load-bearing, not cosmetic. It is what makes the host load the
 plugin at boot, what makes the registry throw if you try to disable it (the API
 turns that into a 409), and what disables the console toggle. The dashboard and
-Superset are the two plugins in this repository that use it: without a dashboard
-there is no front door, and without Superset the original REST routes — which
-read `ctx.superset` directly — have nothing to read.
+control plane are the two plugins in this repository that use it: without a
+dashboard there is no front door, and without the control-plane service the
+original REST routes — which read `ctx.controlPlane` directly — have nothing to
+read.
 
 Do not reach for `alwaysOn` to mean "important". It means "cannot be turned off".
 

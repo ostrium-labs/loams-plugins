@@ -24,7 +24,7 @@ const noop = () => {};
 
 function ctx(): RpcContext {
   return {
-    superset: {
+    controlPlane: {
       listDatasets: async () => ({ result: [{ id: 1, table_name: "sales" }] }),
       describeDataset: async () => ({ id: 7, table_name: "sales", columns: [] }),
       queryData: async () => ({ data: [{ region: "emea", revenue: 1200.5, active: true }] }),

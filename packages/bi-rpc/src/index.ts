@@ -81,7 +81,7 @@ export type { ServiceImpl } from "@connectrpc/connect";
 // message instead of failing to resolve at import time.
 // ---------------------------------------------------------------------------
 
-export interface SupersetPort {
+export interface ControlPlanePort {
   listDatasets(): Promise<unknown>;
   describeDataset(
     id: number,
@@ -129,7 +129,7 @@ export interface FlintPort {
 }
 
 export interface RpcContext {
-  superset: SupersetPort;
+  controlPlane: ControlPlanePort;
   dashboard: DashboardPort;
   data: DataPort;
   render: RenderPort;
@@ -210,8 +210,12 @@ function extractCount(payload: unknown, rows: unknown[]): number {
 export function createDataService(ctx: RpcContext): ServiceImpl<typeof DataService> {
   return {
     async listDatasets(): Promise<ListDatasetsResponse> {
-      const superset = requirePort<SupersetPort>(ctx, "superset", "DataService.ListDatasets");
-      const payload = await superset.listDatasets();
+      const controlPlane = requirePort<ControlPlanePort>(
+        ctx,
+        "controlPlane",
+        "DataService.ListDatasets",
+      );
+      const payload = await controlPlane.listDatasets();
       const list = isRecord(payload) && Array.isArray(payload.result) ? payload.result : [];
       const datasets = list.filter(isRecord).map((row) =>
         create(DatasetRefSchema, {
@@ -225,8 +229,12 @@ export function createDataService(ctx: RpcContext): ServiceImpl<typeof DataServi
     },
 
     async describeDataset(request): Promise<DescribeDatasetResponse> {
-      const superset = requirePort<SupersetPort>(ctx, "superset", "DataService.DescribeDataset");
-      const described = await superset.describeDataset(Number(request.id));
+      const controlPlane = requirePort<ControlPlanePort>(
+        ctx,
+        "controlPlane",
+        "DataService.DescribeDataset",
+      );
+      const described = await controlPlane.describeDataset(Number(request.id));
       const rawColumns = Array.isArray(described?.columns) ? described.columns : [];
       return create(DescribeDatasetResponseSchema, {
         id: BigInt(Number(described?.id ?? request.id)),
@@ -244,7 +252,7 @@ export function createDataService(ctx: RpcContext): ServiceImpl<typeof DataServi
     },
 
     async query(request): Promise<QueryResponse> {
-      const superset = requirePort<SupersetPort>(ctx, "superset", "DataService.Query");
+      const controlPlane = requirePort<ControlPlanePort>(ctx, "controlPlane", "DataService.Query");
       // Repeated fields default to empty on a real message, but these handlers
       // are also called directly in tests with plain literals. Defaulting here
       // keeps both paths honest instead of throwing on `undefined.map`.
@@ -255,7 +263,7 @@ export function createDataService(ctx: RpcContext): ServiceImpl<typeof DataServi
       }));
       const columns = request.columns ?? [];
       const orderby = request.orderby ?? [];
-      const payload = await superset.queryData(
+      const payload = await controlPlane.queryData(
         Number(request.datasetId),
         columns,
         filters.length > 0 ? filters : undefined,

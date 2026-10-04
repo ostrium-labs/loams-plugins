@@ -15,8 +15,8 @@ import { mapColumnsToSemanticTypes } from "./type-mapper.js";
 import type { DashboardTheme, SupersetQueryResult, Widget } from "@loams-plugins/types";
 import { FlintSpecSchema, ThemeSpecSchema } from "@loams-plugins/types";
 import type { ThemeCatalogueEntry } from "@loams-plugins/types";
-// Side-effect import: augments cordis Context with the `superset` key this service injects.
-import "@loams-plugins/plugin-superset-adapter";
+// Side-effect import: augments cordis Context with the `controlPlane` key this service injects.
+import "@loams-plugins/plugin-control-plane";
 
 declare module "cordis" {
   interface Context {
@@ -70,7 +70,7 @@ export interface GroundingFacts {
 }
 
 export class FlintService extends Service {
-  static inject = ["superset"];
+  static inject = ["controlPlane"];
 
   constructor(ctx: Context) {
     super(ctx, "flint");
@@ -447,8 +447,8 @@ export class FlintService extends Service {
   }
 
   async inferSemanticTypes(datasetId: number): Promise<Record<string, string>> {
-    const supersetService: any = this.ctx.superset; // Using any as the superset service type is not known here, but the method is defined in requirements
-    const describeInfo = await supersetService.describeDataset(datasetId);
+    const controlPlaneService: any = this.ctx.controlPlane; // Using any as the control-plane service type is not known here, but the method is defined in requirements
+    const describeInfo = await controlPlaneService.describeDataset(datasetId);
     if (!describeInfo || !describeInfo.columns) {
       return {};
     }

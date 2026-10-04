@@ -6,7 +6,7 @@ import { Context } from "cordis";
 import ConsoleLogger from "@cordisjs/plugin-logger-console";
 import { StderrExporter } from "./logger.js";
 import { StoreService } from "@loams-plugins/plugin-store";
-import { SupersetAdapterService } from "@loams-plugins/plugin-superset-adapter";
+import { ControlPlaneService } from "@loams-plugins/plugin-control-plane";
 import { DataService } from "@loams-plugins/plugin-data";
 import { FlintService } from "@loams-plugins/plugin-flint";
 import { RenderService } from "@loams-plugins/plugin-echarts-render";
@@ -70,7 +70,7 @@ async function bootstrap() {
     connectionString: process.env.DATABASE_URL || "memory",
   });
 
-  await ctx.plugin(SupersetAdapterService, {
+  await ctx.plugin(ControlPlaneService, {
     baseUrl: process.env.SUPERSET_URL || `http://localhost:${SUPERSET_PORT}`,
     username: process.env.SUPERSET_USER || "admin",
     password: process.env.SUPERSET_PASS || "admin",
@@ -135,7 +135,9 @@ async function bootstrap() {
 
   ctx.logger.info(
     "✓ Cordis context initialized with plugins: %s",
-    ["store", "superset", "data", "flint", "render", "dashboard", "agentTools", "core"].join(", "),
+    ["store", "controlPlane", "data", "flint", "render", "dashboard", "agentTools", "core"].join(
+      ", ",
+    ),
   );
   ctx.logger.info(
     "✓ Plugin host ready: %s (%s); control plane at /api/plugins, agent cards at /.well-known/agent-card.json",
@@ -450,7 +452,7 @@ function startHttpApiServer(ctx: Context, port: number) {
 
       // 7. GET /api/datasets
       if (path === "/api/datasets" && req.method === "GET") {
-        const datasets = await ctx.superset.listDatasets();
+        const datasets = await ctx.controlPlane.listDatasets();
         sendJson(200, datasets);
         return;
       }
@@ -458,7 +460,7 @@ function startHttpApiServer(ctx: Context, port: number) {
       // 8. GET /api/datasets/:id
       const datasetMatch = path.match(/^\/api\/datasets\/(\d+)$/);
       if (datasetMatch && req.method === "GET") {
-        const ds = await ctx.superset.describeDataset(parseInt(datasetMatch[1], 10));
+        const ds = await ctx.controlPlane.describeDataset(parseInt(datasetMatch[1], 10));
         sendJson(200, ds);
         return;
       }

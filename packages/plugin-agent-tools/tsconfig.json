@@ -16,7 +16,7 @@
       "path": "../plugin-dashboard-spec"
     },
     {
-      "path": "../plugin-superset-adapter"
+      "path": "../plugin-control-plane"
     },
     {
       "path": "../plugin-echarts-render"

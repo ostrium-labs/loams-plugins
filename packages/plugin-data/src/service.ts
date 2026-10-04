@@ -1,9 +1,9 @@
 import { Context, Service } from "cordis";
-// Side-effect import: augments cordis Context with the `superset` key this service injects.
-import "@loams-plugins/plugin-superset-adapter";
+// Side-effect import: augments cordis Context with the `controlPlane` key this service injects.
+import "@loams-plugins/plugin-control-plane";
 
 export class DataService extends Service {
-  static inject = ["superset"];
+  static inject = ["controlPlane"];
 
   private _cache: Map<string, { data: any; ts: number }> = new Map();
   private _inflight: Map<string, Promise<any>> = new Map();
@@ -89,11 +89,11 @@ export class DataService extends Service {
   }
 
   private async _executeQuery(widget: any, params: Record<string, unknown> = {}) {
-    if (typeof this.ctx.superset?.queryData !== "function") {
+    if (typeof this.ctx.controlPlane?.queryData !== "function") {
       return { data: [], rowcount: 0 };
     }
     const bound = this._bindParams(widget, params);
-    const res = await this.ctx.superset.queryData(bound);
+    const res = await this.ctx.controlPlane.queryData(bound);
     if (res?.result?.[0]) {
       return res.result[0];
     }

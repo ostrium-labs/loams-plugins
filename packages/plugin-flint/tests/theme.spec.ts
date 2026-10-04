@@ -6,7 +6,7 @@ import type { Widget } from "@loams-plugins/types";
 
 function makeService(): FlintService {
   const ctx = new Context();
-  ctx.provide("superset", {});
+  ctx.provide("controlPlane", {});
   return new FlintService(ctx);
 }
 

@@ -11,7 +11,7 @@
       "path": "../types"
     },
     {
-      "path": "../plugin-superset-adapter"
+      "path": "../plugin-control-plane"
     }
   ]
 }
