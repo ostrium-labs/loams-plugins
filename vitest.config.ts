@@ -10,6 +10,7 @@ export default defineConfig({
     watch: false,
     include: [
       "packages/*/tests/**/*.spec.ts",
+      "packages/*/tests/**/*.spec.tsx",
       "packages/*/tests/**/*.test.ts",
       // Apps carry tests too (the Connect bridge lives in apps/server). They
       // were silently skipped before this glob existed: `vitest run <path>`
