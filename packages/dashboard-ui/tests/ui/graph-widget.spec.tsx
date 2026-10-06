@@ -142,7 +142,9 @@ describe("GraphWidget states", () => {
       />,
     );
     await waitFor(() => expect(screen.queryByText(/boom/)).toBeNull());
-    expect(screen.getByText("Web tier")).toBeTruthy();
+    // Inside `waitFor`: the error clears synchronously at the start of the new
+    // request, whereas the graph only lands when that request resolves.
+    await waitFor(() => expect(screen.getByText("Web tier")).toBeTruthy());
   });
 
   it("distinguishes an empty graph from a failed render", async () => {
@@ -172,14 +174,16 @@ describe("GraphWidget interaction", () => {
   });
 
   it("reports nothing when the widget declares no click interaction", async () => {
-    preview.mockResolvedValue(GRAPH_PAYLOAD as never);
+    preview.mockResolvedValue({ nodes: [{ id: "web", position: { x: 0, y: 0 }, data: { label: "Web tier" } }], edges: [] } as never);
     const onParamChange = vi.fn();
     renderWidget({
+      // No `interactions` at all. The payload has to match this widget's own
+      // spec, because the mock answers with whatever it was told to.
       widget: { id: "w", type: "graph", graph: { nodes: [{ id: "web" }] } } as Widget,
       onParamChange,
     });
-    await waitFor(() => expect(screen.getByText("web")).toBeTruthy());
-    screen.getByText("web").click();
+    await waitFor(() => expect(screen.getByText("Web tier")).toBeTruthy());
+    screen.getByText("Web tier").click();
     expect(onParamChange).not.toHaveBeenCalled();
   });
 
@@ -194,16 +198,18 @@ describe("GraphWidget interaction", () => {
     preview.mockResolvedValue(GRAPH_PAYLOAD as never);
     const onSelect = vi.fn();
 
+    // Read mode: the click must reach the graph, not select the tile.
     const readOnly = renderWidget({ onSelect });
+    await waitFor(() => expect(screen.getByText("Web tier")).toBeTruthy());
     screen.getByText("Web tier").click();
     expect(onSelect).not.toHaveBeenCalled();
-    cleanup();
+    readOnly.unmount();
 
+    // Edit mode: the same click selects.
     renderWidget({ onSelect, editMode: true });
     await waitFor(() => expect(screen.getByText("Web tier")).toBeTruthy());
     screen.getByText("Web tier").click();
     expect(onSelect).toHaveBeenCalledWith(WIDGET);
-    readOnly.unmount();
   });
 
   it("deletes the widget from the header action", async () => {

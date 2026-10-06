@@ -104,6 +104,59 @@ export function compileNativeWidget(widget: any, data: any): Record<string, unkn
   return option;
 }
 
+// ─── What this package declines to render ─────────────────────────────
+
+/**
+ * The widget types this package knows how to turn into an ECharts option.
+ *
+ * Closed on purpose. Every type outside this set has a renderer elsewhere, and
+ * `graph` in particular is a sibling type rather than a chart kind because
+ * React Flow's terminal value is a `nodes`/`edges` pair -- see
+ * `@loams-plugins/plugin-flow-render`.
+ */
+export const ECHARTS_WIDGET_TYPES: ReadonlySet<string> = new Set(["chart"]);
+
+/** A widget this package will not render, and the package that owns it. */
+export interface RenderDecline {
+  rendered: false;
+  widgetType: string;
+  reason: string;
+}
+
+/** Where a declined widget type actually goes. */
+const DECLINE_OWNER: Record<string, string> = {
+  graph: "@loams-plugins/plugin-flow-render",
+  kpi: "@loams-plugins/plugin-kpi (unimplemented; not an ECharts widget)",
+  table: "@loams-plugins/plugin-table (unimplemented; not an ECharts widget)",
+  text: "the dashboard's text renderer",
+  filter: "the dashboard's filter bar",
+};
+
+/**
+ * Decline a widget this package does not own.
+ *
+ * Returns `undefined` for a widget that IS an ECharts widget, including one with
+ * no `type` at all. That last part matters: pre-`graph` callers pass
+ * `{ chart: { kind } }` and rely on the option object being produced, so an
+ * absent type is not treated as a non-chart type here.
+ */
+export function declineEChartsRender(widget: unknown): RenderDecline | undefined {
+  if (typeof widget !== "object" || widget === null || Array.isArray(widget)) return undefined;
+  const type = (widget as { type?: unknown }).type;
+  // A non-string `type` is a malformed widget, not a routing decision. Leaving
+  // it to `compileNativeWidget`'s existing errors keeps those messages intact.
+  if (typeof type !== "string" || ECHARTS_WIDGET_TYPES.has(type)) return undefined;
+
+  const owner = DECLINE_OWNER[type];
+  return {
+    rendered: false,
+    widgetType: type,
+    reason:
+      `Widget type "${type}" is not an ECharts widget: this package terminates in an ECharts ` +
+      `option object, and a "${type}" widget does not. Rendered instead by ${owner ?? "another renderer"}.`,
+  };
+}
+
 // ─── Built-in chart kind registrations ───────────────────────────────
 
 registerChartKind("line", {

@@ -89,13 +89,15 @@ describe("compileGraph", () => {
   it("reverses the flow for bottom-to-top and right-to-left", () => {
     const bt = compileGraph({ ...CHAIN, layout: { direction: "BT" } }, []).nodes;
     const tb = compileGraph({ ...CHAIN, layout: { direction: "TB" } }, []).nodes;
+    // `db`, not `web`: rank 0 is the origin in every direction, so only a node
+    // that actually moves along the rank axis can show the reversal.
     const dbY = (list: typeof bt) => list.find((n) => n.id === "db")!.position.y;
     expect(dbY(bt)).toBeLessThan(dbY(tb));
 
     const rl = compileGraph({ ...CHAIN, layout: { direction: "RL" } }, []).nodes;
     const lr = compileGraph({ ...CHAIN, layout: { direction: "LR" } }, []).nodes;
-    const webX = (list: typeof rl) => list.find((n) => n.id === "web")!.position.x;
-    expect(webX(rl)).toBeLessThan(webX(lr));
+    const dbX = (list: typeof rl) => list.find((n) => n.id === "db")!.position.x;
+    expect(dbX(rl)).toBeLessThan(dbX(lr));
   });
 
   it("gives every node a distinct position", () => {
@@ -228,7 +230,9 @@ describe("compileGraph", () => {
       [],
     );
     expect(graph.edges).toHaveLength(1);
-    expect(graph.diagnostics.droppedEdges).toEqual(["ghost"]);
+    // The diagnostic names both endpoints and the edge's index, not just the
+    // dangling one: an author looking at three edges needs to know which.
+    expect(graph.diagnostics.droppedEdges).toEqual(["a->ghost#0"]);
   });
 
   it("drops a duplicate node id, keeping the first", () => {

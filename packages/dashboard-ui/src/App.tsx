@@ -9,6 +9,7 @@ import {
   removeWidgetFromDashboard,
 } from "./api";
 import { WidgetCard } from "./components/WidgetCard";
+import { GraphWidget } from "./components/GraphWidget";
 import { Inspector } from "./components/Inspector";
 import { ChartPickerSheet } from "./components/ChartPickerSheet";
 import { ThemePickerSheet } from "./components/ThemePickerSheet";
@@ -427,23 +428,47 @@ export function App() {
 
               return (
                 <div key={item.id}>
-                  <WidgetCard
-                    widget={widget}
-                    editMode={editMode}
-                    isSelected={selectedWidget?.id === widget.id}
-                    params={currentParams}
-                    /*
-                     * Per-widget override wins over the dashboard theme, so
-                     * this is the effective one for that widget. It tells the
-                     * card whether the server owns its colours — see the
-                     * `hasTheme` note in WidgetCard.
-                     */
-                    hasTheme={Boolean(widget.flint?.theme_spec ?? spec.theme)}
-                    dashboardTheme={spec.theme}
-                    onSelect={setSelectedWidget}
-                    onDelete={handleDeleteWidget}
-                    onParamChange={handleParamChange}
-                  />
+                  {/*
+                   * `graph` is a sibling widget type, not a chart kind, so it
+                   * gets its own tile and its own preview route rather than a
+                   * branch inside `WidgetCard` -- React Flow owns its canvas,
+                   * its drag/zoom/pan state and its teardown, and none of that
+                   * is an ECharts concern.
+                   *
+                   * A graph widget cannot carry `flint.theme_spec` (the schema
+                   * forbids it), so the dashboard theme is unconditionally the
+                   * effective one for it -- no per-widget override to prefer.
+                   */}
+                  {widget.type === "graph" ? (
+                    <GraphWidget
+                      widget={widget}
+                      editMode={editMode}
+                      isSelected={selectedWidget?.id === widget.id}
+                      params={currentParams}
+                      dashboardTheme={spec.theme}
+                      onSelect={setSelectedWidget}
+                      onDelete={handleDeleteWidget}
+                      onParamChange={handleParamChange}
+                    />
+                  ) : (
+                    <WidgetCard
+                      widget={widget}
+                      editMode={editMode}
+                      isSelected={selectedWidget?.id === widget.id}
+                      params={currentParams}
+                      /*
+                       * Per-widget override wins over the dashboard theme, so
+                       * this is the effective one for that widget. It tells the
+                       * card whether the server owns its colours — see the
+                       * `hasTheme` note in WidgetCard.
+                       */
+                      hasTheme={Boolean(widget.flint?.theme_spec ?? spec.theme)}
+                      dashboardTheme={spec.theme}
+                      onSelect={setSelectedWidget}
+                      onDelete={handleDeleteWidget}
+                      onParamChange={handleParamChange}
+                    />
+                  )}
                 </div>
               );
             })}

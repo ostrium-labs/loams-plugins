@@ -18,6 +18,7 @@
     "@loams-plugins/plugin-data": "*",
     "@loams-plugins/plugin-echarts-render": "*",
     "@loams-plugins/plugin-flint": "*",
+    "@loams-plugins/plugin-flow-render": "*",
     "@loams-plugins/plugin-forgejo-adapter": "*",
     "@loams-plugins/plugin-glitchtip-adapter": "*",
     "@loams-plugins/plugin-itsaplan-adapter": "*",

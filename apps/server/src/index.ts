@@ -10,6 +10,7 @@ import { ControlPlaneService } from "@loams-plugins/plugin-control-plane";
 import { DataService } from "@loams-plugins/plugin-data";
 import { FlintService } from "@loams-plugins/plugin-flint";
 import { RenderService } from "@loams-plugins/plugin-echarts-render";
+import { FlowRenderService } from "@loams-plugins/plugin-flow-render";
 import { DashboardSpecService } from "@loams-plugins/plugin-dashboard-spec";
 import { AgentToolsService, startMCPServer } from "@loams-plugins/plugin-agent-tools";
 import {
@@ -79,6 +80,13 @@ async function bootstrap() {
   await ctx.plugin(DataService);
   await ctx.plugin(FlintService);
   await ctx.plugin(RenderService);
+  // Graph widgets, not chart widgets. Registered after `RenderService` and for a
+  // stated reason: the two renderers are mutually exclusive per widget -- a
+  // `graph` widget is declined by `ctx.render` and a `chart` widget is refused
+  // by `ctx.flow` -- so their order does not matter, but both must exist before
+  // the REST routes below are mounted, since `/api/graphs/preview` calls
+  // `ctx.flow` and `/api/widgets/preview` calls `ctx.render`.
+  await ctx.plugin(FlowRenderService);
   await ctx.plugin(DashboardSpecService);
   await ctx.plugin(AgentToolsService);
 
@@ -135,7 +143,7 @@ async function bootstrap() {
 
   ctx.logger.info(
     "✓ Cordis context initialized with plugins: %s",
-    ["store", "controlPlane", "data", "flint", "render", "dashboard", "agentTools", "core"].join(
+    ["store", "controlPlane", "data", "flint", "render", "flow", "dashboard", "agentTools", "core"].join(
       ", ",
     ),
   );
@@ -487,6 +495,41 @@ function startHttpApiServer(ctx: Context, port: number) {
           option,
           sampleRows: rows.slice(0, 5),
           rowCount: data?.rowcount ?? rows.length,
+        });
+        return;
+      }
+
+      // 14. POST /api/graphs/preview (compile a `graph` widget to React Flow
+      // nodes + edges).
+      //
+      // A SEPARATE route from `/api/widgets/preview` rather than a branch inside
+      // it, because the two widgets terminate in different shapes and are
+      // compiled by different services: this one calls `ctx.flow`, that one calls
+      // `ctx.render`. Posting a graph widget to the echarts route is declined by
+      // `ctx.render` rather than silently half-answered.
+      if (path === "/api/graphs/preview" && req.method === "POST") {
+        const body = await readBody();
+        const params = body.params || {};
+        // `tryCompileGraphWidget`, not `compileGraphWidget`: this route accepts
+        // whatever widget it is posted, so a non-graph widget is a 400 with a
+        // reason rather than a 500 from a thrown refusal.
+        const compiled = await ctx.flow.tryCompileGraphWidget(
+          body.widget,
+          params,
+          body.dashboardTheme,
+        );
+        if (!compiled.ok) {
+          sendJson(400, { error: compiled.reason });
+          return;
+        }
+        const { graph } = compiled;
+        sendJson(200, {
+          nodes: graph.nodes,
+          edges: graph.edges,
+          theme: graph.theme,
+          fitView: graph.fitView,
+          pannable: graph.pannable,
+          zoomable: graph.zoomable,
         });
         return;
       }

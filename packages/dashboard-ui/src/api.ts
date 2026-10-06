@@ -31,7 +31,7 @@ export interface DashboardSpec {
 
 export interface Widget {
   id: string;
-  type: "chart" | "kpi" | "table" | "text" | "filter";
+  type: "chart" | "kpi" | "table" | "text" | "filter" | "graph";
   data: {
     source: "superset";
     datasetId?: number;
@@ -46,6 +46,45 @@ export interface Widget {
     baseSize?: { width: number; height: number };
     chartProperties?: Record<string, unknown>;
     theme_spec?: string | Record<string, unknown>;
+  };
+  /**
+   * A node/edge graph, for `type: "graph"` only.
+   *
+   * A SIBLING of `chart`, not another chart kind: `plugin-echarts-render`
+   * terminates in an ECharts option object and React Flow does not have one.
+   * `packages/plugin-flow-render` renders these instead. Declared here rather
+   * than imported from `@loams-plugins/types` because this package is a
+   * noEmit browser bundle and the zod schemas would pull in server-side code.
+   */
+  graph?: {
+    title?: string;
+    nodes: Array<{
+      id: string;
+      label?: string;
+      labelField?: string;
+      position?: { x: number; y: number };
+      color?: string;
+      className?: string;
+    }>;
+    edges?: Array<{
+      id?: string;
+      source: string;
+      target: string;
+      label?: string;
+      value?: number;
+      animated?: boolean;
+      color?: string;
+    }>;
+    layout?: {
+      direction?: "TB" | "LR" | "BT" | "RL";
+      nodeWidth?: number;
+      nodeHeight?: number;
+      rankSep?: number;
+      nodeSep?: number;
+    };
+    fitView?: boolean;
+    pannable?: boolean;
+    zoomable?: boolean;
   };
   chart?: {
     kind: "line" | "bar" | "pie" | "scatter" | "heatmap" | "funnel" | "sankey" | "area" | "custom";
@@ -168,6 +207,36 @@ export async function previewWidget(
   rowCount: number;
 }> {
   const res = await fetch(`${API_BASE}/widgets/preview`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ widget, params, dashboardTheme }),
+  });
+  if (!res.ok) throw new Error(`Failed to preview widget: ${res.statusText}`);
+  return res.json();
+}
+
+/**
+ * The compiled `{ nodes, edges }` for a `graph` widget.
+ *
+ * A different endpoint from `previewWidget`, not the same one with a different
+ * body: the two widgets terminate in different shapes, so the routes compile
+ * them through different services (`ctx.flow` and `ctx.render`). Posting a graph
+ * widget to `/widgets/preview` is declined by that service, not silently
+ * half-answered.
+ */
+export async function previewGraph(
+  widget: Widget,
+  params?: Record<string, unknown>,
+  dashboardTheme?: unknown,
+): Promise<{
+  nodes: Array<Record<string, unknown>>;
+  edges: Array<Record<string, unknown>>;
+  theme?: Record<string, string>;
+  fitView?: boolean;
+  pannable?: boolean;
+  zoomable?: boolean;
+}> {
+  const res = await fetch(`${API_BASE}/graphs/preview`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ widget, params, dashboardTheme }),

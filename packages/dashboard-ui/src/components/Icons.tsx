@@ -21,6 +21,7 @@ import {
   Check,
   Ellipsis,
   Info,
+  Network,
   Palette,
   Pencil,
   Plus,
@@ -51,6 +52,13 @@ export const LineChartIcon = sized(ChartLine, 15);
 export const BarChartIcon = sized(ChartColumn, 15);
 export const PieChartIcon = sized(ChartPie, 15);
 export const SparklesIcon = sized(Sparkles, 15);
+/**
+ * The graph widget's header glyph.
+ *
+ * Sized 15 like its chart siblings so the header icon box holds the same for
+ * every tile in the grid.
+ */
+export const NetworkIcon = sized(Network, 15);
 
 /* Dashboard header controls. */
 export const RefreshIcon = sized(RefreshCw, 14);

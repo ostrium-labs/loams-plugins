@@ -1,5 +1,6 @@
 import { Context, Service } from "cordis";
-import { registerChartKind, compileNativeWidget } from "./compiler.js";
+import { registerChartKind, compileNativeWidget, declineEChartsRender } from "./compiler.js";
+import type { RenderDecline } from "./compiler.js";
 import { applyGroundedInk, buildThemeFacts, collectUnmappedDecisions } from "./theme-decisions.js";
 import type { ThemeGroundingFacts } from "./theme-decisions.js";
 import type { DesignDecisions, ThemeReport } from "flint-chart/core";
@@ -93,6 +94,26 @@ function describeThemeReport(report: ThemeReport[] | undefined): string {
   return report.map((entry) => `${entry.path}: ${entry.message}`).join("; ");
 }
 
+/**
+ * Thrown when a widget this package cannot render reaches it.
+ *
+ * `Unknown chart kind: undefined` was the old answer for a graph widget, and it
+ * was wrong twice over: the widget was well-formed, and no chart kind could ever
+ * have rendered it. This says what is actually true and names the package that
+ * does render it.
+ */
+export class NotAnEChartsWidgetError extends Error {
+  readonly widgetType: string;
+  readonly reason: string;
+
+  constructor(decline: RenderDecline) {
+    super(decline.reason);
+    this.name = "NotAnEChartsWidgetError";
+    this.widgetType = decline.widgetType;
+    this.reason = decline.reason;
+  }
+}
+
 export class RenderService extends Service {
   static inject = ["data", "flint"];
 
@@ -117,8 +138,16 @@ export class RenderService extends Service {
    * Precedence over the per-widget `flint.theme_spec` is NOT decided here: it
    * belongs to `resolveWidgetTheme`, which is also where a bare preset name, a
    * `{ preset, custom }` pair and a malformed widget override are all resolved.
+   *
+   * @throws {NotAnEChartsWidgetError} when the widget is not an ECharts widget.
+   * A `graph` widget reaches here when a caller routed it to the wrong renderer;
+   * the error names the package that owns it. Use `tryCompileWidget` where the
+   * widget's type is not known in advance.
    */
   async compileWidget(widget: any, params?: Record<string, unknown>, dashboardTheme?: unknown) {
+    const decline = declineEChartsRender(widget);
+    if (decline) throw new NotAnEChartsWidgetError(decline);
+
     const { dataParams, dashboardTheme: themeFromParams } = splitRenderParams(params);
     const data = await this.ctx.data.fetchWidgetData(widget, dataParams);
     const rows = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
@@ -146,6 +175,24 @@ export class RenderService extends Service {
     // without its own `theme_spec`. A theme that loses to a fallback is not a
     // theme.
     return this._applyTheme(widget, options, dashboardTheme ?? themeFromParams, rows);
+  }
+
+  /**
+   * Compile, or decline -- for a caller that does not know the widget's type.
+   *
+   * The decline happens BEFORE the data query, so a widget routed to the wrong
+   * renderer costs no query. A chart widget with an unregistered kind still
+   * throws, because that is a real authoring error about a widget this package
+   * does own.
+   */
+  async tryCompileWidget(
+    widget: any,
+    params?: Record<string, unknown>,
+    dashboardTheme?: unknown,
+  ): Promise<{ rendered: true; options: Record<string, unknown> } | RenderDecline> {
+    const decline = declineEChartsRender(widget);
+    if (decline) return decline;
+    return { rendered: true, options: await this.compileWidget(widget, params, dashboardTheme) };
   }
 
   async previewWidget(widget: any, params?: Record<string, unknown>, dashboardTheme?: unknown) {

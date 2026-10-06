@@ -49,8 +49,9 @@ interface HarnessOptions {
 /**
  * A context with stubbed `data` and `flint`.
  *
- * `flint` defaults to a bridge that resolves and grounds successfully; a test
- * that cares about a failure mode passes its own.
+ * `flint` defaults to a bridge that resolves and grounds successfully. Pass
+ * `flint: null` for "no flint service at all" -- `undefined` cannot express
+ * that here, because it is the default-bridge sentinel.
  */
 function harness({ rows = ROWS, fetch, flint }: HarnessOptions = {}) {
   const ctx = new Context();
@@ -64,20 +65,24 @@ function harness({ rows = ROWS, fetch, flint }: HarnessOptions = {}) {
     },
   });
 
-  const bridge =
-    flint === undefined
-      ? {
-          resolveWidgetTheme(widget: unknown, dashboardTheme: unknown) {
-            resolveCalls.push({ widget, dashboardTheme });
-            return { valid: true, source: "preset", spec: { preset: "house" } };
-          },
-          groundTheme() {
-            return GROUNDED;
-          },
-        }
-      : flint;
-
-  ctx.provide("flint", bridge as never);
+  if (flint === null) {
+    // What "plugin-flint is not installed" looks like on a cordis context.
+    ctx.provide("flint", null as never);
+  } else {
+    const bridge =
+      flint === undefined
+        ? {
+            resolveWidgetTheme(widget: unknown, dashboardTheme: unknown) {
+              resolveCalls.push({ widget, dashboardTheme });
+              return { valid: true, source: "preset", spec: { preset: "house" } };
+            },
+            groundTheme() {
+              return GROUNDED;
+            },
+          }
+        : flint;
+    ctx.provide("flint", bridge as never);
+  }
   return { flow: new FlowRenderService(ctx), resolveCalls, dataCalls, ctx };
 }
 
@@ -86,7 +91,9 @@ const GRAPH_WIDGET = {
   type: "graph",
   data: { source: "superset", datasetId: 1 },
   graph: {
-    nodes: [{ id: "web" }, { id: "api" }],
+    // `labelField`, not an auto-detected column: guessing which field holds a
+    // node's label is magic, and the spec names it explicitly instead.
+    nodes: [{ id: "web", labelField: "name" }, { id: "api", labelField: "name" }],
     edges: [{ source: "web", target: "api" }],
   },
 };
@@ -191,7 +198,7 @@ describe("FlowRenderService.compileGraphWidget", () => {
 describe("FlowRenderService theme degradation", () => {
   /** Every one of these must still yield a renderable graph. */
   const broken = {
-    "no flint service at all": undefined,
+    "no flint service at all": null,
     "resolveWidgetTheme throws": {
       resolveWidgetTheme() {
         throw new Error("boom");

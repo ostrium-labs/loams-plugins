@@ -57,6 +57,25 @@ copied, because they are coupled to `react-router`/`effect` or because their
 licence could not be verified.
 
 ---------------------------------------------------------------------------
+Third-party runtime dependencies
+---------------------------------------------------------------------------
+
+Unlike the section above, no source from the following is vendored, adapted or
+redistributed here; they are ordinary npm dependencies, installed from their
+registries under their own licences. They are recorded because this repository's
+licence policy admits only Apache-2.0, MIT and BSD, and each of these is inside
+it:
+
+    @xyflow/react   MIT   (packages/dashboard-ui; React Flow, https://reactflow.dev)
+
+`@xyflow/react` is the renderer behind the `graph` widget type. It is a runtime
+dependency of the browser bundle only: `@loams-plugins/plugin-flow-render`
+emits the `nodes`/`edges` pair it mounts and does not import it, which is what
+keeps that package testable with no DOM. See
+`packages/plugin-flow-render/README.md` for why `graph` is a sibling
+`Widget.type` rather than a new `ChartSchema.kind`.
+
+---------------------------------------------------------------------------
 Upstream services consumed over HTTP
 ---------------------------------------------------------------------------
 
