@@ -93,7 +93,10 @@ const GRAPH_WIDGET = {
   graph: {
     // `labelField`, not an auto-detected column: guessing which field holds a
     // node's label is magic, and the spec names it explicitly instead.
-    nodes: [{ id: "web", labelField: "name" }, { id: "api", labelField: "name" }],
+    nodes: [
+      { id: "web", labelField: "name" },
+      { id: "api", labelField: "name" },
+    ],
     edges: [{ source: "web", target: "api" }],
   },
 };
@@ -137,7 +140,10 @@ describe("FlowRenderService.compileGraphWidget", () => {
     // Every params entry becomes a SQL filter column, so a theme left in there
     // would query a column literally named `__dashboardTheme`.
     const { flow, dataCalls } = harness();
-    await flow.compileGraphWidget(GRAPH_WIDGET, { region: "North", [DASHBOARD_THEME_PARAM]: "house" });
+    await flow.compileGraphWidget(GRAPH_WIDGET, {
+      region: "North",
+      [DASHBOARD_THEME_PARAM]: "house",
+    });
     expect(dataCalls[0]).toEqual({ region: "North" });
   });
 
@@ -157,7 +163,11 @@ describe("FlowRenderService.compileGraphWidget", () => {
 
   it("lets an explicit theme outrank the reserved key", async () => {
     const { flow, resolveCalls } = harness();
-    await flow.compileGraphWidget(GRAPH_WIDGET, { [DASHBOARD_THEME_PARAM]: "from-params" }, "explicit");
+    await flow.compileGraphWidget(
+      GRAPH_WIDGET,
+      { [DASHBOARD_THEME_PARAM]: "from-params" },
+      "explicit",
+    );
     expect(resolveCalls[0].dashboardTheme).toBe("explicit");
   });
 
@@ -205,7 +215,10 @@ describe("FlowRenderService theme degradation", () => {
       },
     },
     "resolveWidgetTheme reports invalid": {
-      resolveWidgetTheme: () => ({ valid: false, report: [{ path: "preset", message: "unknown" }] }),
+      resolveWidgetTheme: () => ({
+        valid: false,
+        report: [{ path: "preset", message: "unknown" }],
+      }),
     },
     "resolveWidgetTheme returns nothing": { resolveWidgetTheme: () => undefined },
     "groundTheme throws": {
@@ -283,19 +296,23 @@ describe("FlowRenderService theme degradation", () => {
 describe("FlowRenderService widget typing", () => {
   it("refuses a widget that is not a graph", async () => {
     const { flow } = harness();
-    await expect(flow.compileGraphWidget({ id: "w", type: "chart", chart: { kind: "line" } })).rejects.toThrow(
-      NotAGraphWidgetError,
-    );
+    await expect(
+      flow.compileGraphWidget({ id: "w", type: "chart", chart: { kind: "line" } }),
+    ).rejects.toThrow(NotAGraphWidgetError);
   });
 
   it("names the flow package in the refusal, so a misroute is legible", async () => {
     const { flow } = harness();
-    await expect(flow.compileGraphWidget({ id: "w", type: "chart" })).rejects.toThrow(/plugin-flow-render/);
+    await expect(flow.compileGraphWidget({ id: "w", type: "chart" })).rejects.toThrow(
+      /plugin-flow-render/,
+    );
   });
 
   it("refuses a graph widget with no graph block", async () => {
     const { flow } = harness();
-    await expect(flow.compileGraphWidget({ id: "w", type: "graph" })).rejects.toThrow(NotAGraphWidgetError);
+    await expect(flow.compileGraphWidget({ id: "w", type: "graph" })).rejects.toThrow(
+      NotAGraphWidgetError,
+    );
   });
 
   it("tryCompileGraphWidget reports the refusal instead of throwing", async () => {

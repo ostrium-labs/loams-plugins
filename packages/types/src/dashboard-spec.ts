@@ -239,10 +239,13 @@ export const WidgetSchema = WidgetBaseSchema.refine(
   .refine((data) => data.type !== "graph" || data.graph !== undefined, {
     message: "Graph widgets must define 'graph'.",
   })
-  .refine((data) => data.type !== "graph" || (data.flint === undefined && data.chart === undefined), {
-    message:
-      "Graph widgets are rendered by plugin-flow-render, not ECharts; they must not declare 'flint' or 'chart'.",
-  });
+  .refine(
+    (data) => data.type !== "graph" || (data.flint === undefined && data.chart === undefined),
+    {
+      message:
+        "Graph widgets are rendered by plugin-flow-render, not ECharts; they must not declare 'flint' or 'chart'.",
+    },
+  );
 
 export type Widget = z.infer<typeof WidgetSchema>;
 

@@ -152,7 +152,9 @@ describe("compileGraph", () => {
 
   it("survives a row that is not an object", () => {
     expect(() => compileGraph({ nodes: [{ id: "a" }] }, [null, 7, "x"] as unknown[])).not.toThrow();
-    expect(compileGraph({ nodes: [{ id: "a" }] }, [null, 7] as unknown[]).nodes[0].data.label).toBe("a");
+    expect(compileGraph({ nodes: [{ id: "a" }] }, [null, 7] as unknown[]).nodes[0].data.label).toBe(
+      "a",
+    );
   });
 
   it("survives no rows at all", () => {
@@ -237,7 +239,12 @@ describe("compileGraph", () => {
 
   it("drops a duplicate node id, keeping the first", () => {
     const graph = compileGraph(
-      { nodes: [{ id: "a", label: "First" }, { id: "a", label: "Second" }] } as never,
+      {
+        nodes: [
+          { id: "a", label: "First" },
+          { id: "a", label: "Second" },
+        ],
+      } as never,
       [],
     );
     expect(graph.nodes).toHaveLength(1);
@@ -269,7 +276,9 @@ describe("compileGraph", () => {
   });
 
   it("lays a self-referential graph out rather than looping forever", () => {
-    expect(() => compileGraph({ nodes: [{ id: "a" }], edges: [{ source: "a", target: "a" }] }, [])).not.toThrow();
+    expect(() =>
+      compileGraph({ nodes: [{ id: "a" }], edges: [{ source: "a", target: "a" }] }, []),
+    ).not.toThrow();
   });
 
   it("paints nodes from the palette by index and lets an explicit colour win", () => {

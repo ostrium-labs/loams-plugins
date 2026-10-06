@@ -171,7 +171,8 @@ export function graphParamFilter(widget: unknown, node: ClickedNode): Record<str
  * has its own default.
  */
 export function graphTitle(widget: unknown): string {
-  const explicit = isPlainObject(widget) && isPlainObject(widget.graph) ? asString(widget.graph.title) : undefined;
+  const explicit =
+    isPlainObject(widget) && isPlainObject(widget.graph) ? asString(widget.graph.title) : undefined;
   return explicit ?? "Graph Widget";
 }
 

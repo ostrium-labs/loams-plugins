@@ -24,7 +24,7 @@ in an option object -- and gives the graph its own terminal type. Correspondingl
 (`declineEChartsRender`) instead of throwing `Unknown chart kind: undefined`,
 which is what it used to do for anything it did not recognise.
 
-A `ChartSchema.kind` is a legitimate thing to add for the *next* graph-shaped
+A `ChartSchema.kind` is a legitimate thing to add for the _next_ graph-shaped
 visualisation that ECharts genuinely can draw -- a network chart on its `graph`
 series, say. This is not that.
 
@@ -32,14 +32,14 @@ series, say. This is not that.
 
 Mirrors `plugin-echarts-render` exactly:
 
-| | `plugin-echarts-render` | this package |
-| --- | --- | --- |
-| service | `RenderService` (`ctx.render`) | `FlowRenderService` (`ctx.flow`) |
-| `static inject` | `["data", "flint"]` | `["data", "flint"]` |
-| data | `ctx.data.fetchWidgetData` | same |
-| theme | `ctx.flint.resolveWidgetTheme(widget, dashboardTheme)` | same |
-| terminal value | ECharts option object | `{ nodes, edges }` |
-| refuses | `NotAnEChartsWidgetError` | `NotAGraphWidgetError` |
+|                 | `plugin-echarts-render`                                | this package                     |
+| --------------- | ------------------------------------------------------ | -------------------------------- |
+| service         | `RenderService` (`ctx.render`)                         | `FlowRenderService` (`ctx.flow`) |
+| `static inject` | `["data", "flint"]`                                    | `["data", "flint"]`              |
+| data            | `ctx.data.fetchWidgetData`                             | same                             |
+| theme           | `ctx.flint.resolveWidgetTheme(widget, dashboardTheme)` | same                             |
+| terminal value  | ECharts option object                                  | `{ nodes, edges }`               |
+| refuses         | `NotAnEChartsWidgetError`                              | `NotAGraphWidgetError`           |
 
 `compileGraphWidget(widget, params?, dashboardTheme?)` returns
 `{ nodes, edges, diagnostics, theme, fitView, pannable, zoomable }`.
@@ -87,11 +87,11 @@ in `diagnostics` rather than thrown, and the service logs them.
 
 ## Dependencies
 
-| Package | Licence | Why |
-| --- | --- | --- |
-| `cordis` | MIT | the plugin host |
-| `flint-chart` | see `NOTICE` | `DesignDecisions` / `ThemeReport` types only |
-| `@loams-plugins/*` | Apache-2.0 | workspace siblings |
+| Package            | Licence      | Why                                          |
+| ------------------ | ------------ | -------------------------------------------- |
+| `cordis`           | MIT          | the plugin host                              |
+| `flint-chart`      | see `NOTICE` | `DesignDecisions` / `ThemeReport` types only |
+| `@loams-plugins/*` | Apache-2.0   | workspace siblings                           |
 
 `@xyflow/react` (MIT) is a dependency of `@loams-plugins/dashboard-ui`, which is
 where React Flow is actually imported -- this package emits the arrays and has no

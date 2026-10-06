@@ -40,7 +40,10 @@ const GRAPH_WIDGET = {
 };
 
 /** The issues of a failed parse, flattened for a readable assertion. */
-function issuesOf(result: { success: boolean; error?: { issues: { path: (string | number)[]; message: string }[] } }) {
+function issuesOf(result: {
+  success: boolean;
+  error?: { issues: { path: (string | number)[]; message: string }[] };
+}) {
   return (result.error?.issues ?? []).map((i) => `${i.path.join(".")}: ${i.message}`);
 }
 
@@ -135,11 +138,13 @@ describe("the chart rule survives the new type", () => {
   });
 
   it("still accepts a chart widget with exactly one of them", () => {
-    expect(WidgetSchema.safeParse({ id: "w", type: "chart", chart: { kind: "bar", encode: {} } }).success).toBe(
-      true,
-    );
     expect(
-      WidgetSchema.safeParse({ id: "w", type: "chart", flint: { chartType: "Pie", encodings: {} } }).success,
+      WidgetSchema.safeParse({ id: "w", type: "chart", chart: { kind: "bar", encode: {} } })
+        .success,
+    ).toBe(true);
+    expect(
+      WidgetSchema.safeParse({ id: "w", type: "chart", flint: { chartType: "Pie", encodings: {} } })
+        .success,
     ).toBe(true);
   });
 
@@ -217,7 +222,10 @@ describe("GraphSpecSchema structural rules", () => {
   });
 
   it("rejects an unknown layout direction", () => {
-    const result = GraphSpecSchema.safeParse({ nodes: [{ id: "a" }], layout: { direction: "sideways" } });
+    const result = GraphSpecSchema.safeParse({
+      nodes: [{ id: "a" }],
+      layout: { direction: "sideways" },
+    });
     expect(result.success).toBe(false);
   });
 

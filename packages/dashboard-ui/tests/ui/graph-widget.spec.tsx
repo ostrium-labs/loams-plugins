@@ -42,7 +42,12 @@ const GRAPH_PAYLOAD = {
 const WIDGET = {
   id: "w-graph",
   type: "graph",
-  graph: { nodes: [{ id: "web", label: "Web tier" }, { id: "api", label: "API tier" }] },
+  graph: {
+    nodes: [
+      { id: "web", label: "Web tier" },
+      { id: "api", label: "API tier" },
+    ],
+  },
   interactions: [{ on: "click", set: { service: "label" } }],
 } as unknown as Widget;
 
@@ -74,7 +79,9 @@ describe("GraphWidget rendering", () => {
 
   it("shows the graph title from the widget spec", async () => {
     preview.mockResolvedValue(GRAPH_PAYLOAD as never);
-    renderWidget({ widget: { ...WIDGET, graph: { ...(WIDGET.graph as object), title: "Service Map" } } as Widget });
+    renderWidget({
+      widget: { ...WIDGET, graph: { ...(WIDGET.graph as object), title: "Service Map" } } as Widget,
+    });
     await waitFor(() => expect(screen.getByText("Service Map")).toBeTruthy());
   });
 
@@ -107,7 +114,11 @@ describe("GraphWidget rendering", () => {
 describe("GraphWidget states", () => {
   it("shows a loading state until the graph arrives", async () => {
     let release!: (value: unknown) => void;
-    preview.mockReturnValue(new Promise((r) => { release = r; }) as never);
+    preview.mockReturnValue(
+      new Promise((r) => {
+        release = r;
+      }) as never,
+    );
     const { container } = renderWidget();
     expect(container.querySelector(".animate-spin-slow")).toBeTruthy();
     release(GRAPH_PAYLOAD);
@@ -174,7 +185,10 @@ describe("GraphWidget interaction", () => {
   });
 
   it("reports nothing when the widget declares no click interaction", async () => {
-    preview.mockResolvedValue({ nodes: [{ id: "web", position: { x: 0, y: 0 }, data: { label: "Web tier" } }], edges: [] } as never);
+    preview.mockResolvedValue({
+      nodes: [{ id: "web", position: { x: 0, y: 0 }, data: { label: "Web tier" } }],
+      edges: [],
+    } as never);
     const onParamChange = vi.fn();
     renderWidget({
       // No `interactions` at all. The payload has to match this widget's own

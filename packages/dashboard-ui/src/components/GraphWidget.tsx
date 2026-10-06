@@ -32,7 +32,13 @@ import {
 import "@xyflow/react/dist/style.css";
 import { cn } from "@loams-plugins/core/ui";
 import { Widget, previewGraph } from "../api";
-import { graphParamFilter, graphSubtitle, graphTitle, toFlowView, type FlowView } from "./graphView";
+import {
+  graphParamFilter,
+  graphSubtitle,
+  graphTitle,
+  toFlowView,
+  type FlowView,
+} from "./graphView";
 import { CardFrame, SPINNER, STATE_OVERLAY } from "./cardChrome";
 import { NetworkIcon } from "./Icons";
 
@@ -214,7 +220,17 @@ const GraphCanvas: React.FC<{
   zoomable: boolean;
   visible: boolean;
   onNodeClick: NodeMouseHandler;
-}> = ({ containerRef, nodes, edges, fitView, fitToken, pannable, zoomable, visible, onNodeClick }) => (
+}> = ({
+  containerRef,
+  nodes,
+  edges,
+  fitView,
+  fitToken,
+  pannable,
+  zoomable,
+  visible,
+  onNodeClick,
+}) => (
   <div
     ref={containerRef}
     className={cn("h-full w-full flex-1")}

@@ -191,7 +191,11 @@ export function layoutGraph(spec: unknown): Map<string, number> {
  * Exported separately from {@link compileGraph} because the ranking is the only
  * part with real logic in it, and it is the part worth testing on its own.
  */
-export function positionNodes(nodes: GraphNode[], edges: Array<{ source: string; target: string }>, layout: GraphLayout): Map<string, { x: number; y: number }> {
+export function positionNodes(
+  nodes: GraphNode[],
+  edges: Array<{ source: string; target: string }>,
+  layout: GraphLayout,
+): Map<string, { x: number; y: number }> {
   const ranks = layoutGraph({ nodes, edges });
   const byRank = new Map<number, string[]>();
   for (const node of nodes) {
@@ -268,7 +272,11 @@ function readLabel(node: GraphNode, row: Dict | undefined): string {
  * condition -- an empty *result* is a valid state and is reported through
  * `diagnostics` instead.
  */
-export function compileGraph(spec: unknown, rows: unknown[], options: CompileGraphOptions = {}): CompiledGraph {
+export function compileGraph(
+  spec: unknown,
+  rows: unknown[],
+  options: CompileGraphOptions = {},
+): CompiledGraph {
   if (!isPlainObject(spec)) {
     throw new Error("GraphSpec must be an object; a graph needs at least one node.");
   }
@@ -325,7 +333,9 @@ export function compileGraph(spec: unknown, rows: unknown[], options: CompileGra
     // renders as nothing, so the graph comes up with a connection missing and
     // no error to explain it.
     if (source === undefined || target === undefined || !seen.has(source) || !seen.has(target)) {
-      diagnostics.droppedEdges.push(asString(raw.id) ?? `${source ?? "?"}->${target ?? "?"}#${index}`);
+      diagnostics.droppedEdges.push(
+        asString(raw.id) ?? `${source ?? "?"}->${target ?? "?"}#${index}`,
+      );
       return;
     }
     const type = raw.type;
@@ -341,7 +351,10 @@ export function compileGraph(spec: unknown, rows: unknown[], options: CompileGra
       source,
       target,
       type:
-        type === "straight" || type === "smoothstep" || type === "simplebezier" || type === "default"
+        type === "straight" ||
+        type === "smoothstep" ||
+        type === "simplebezier" ||
+        type === "default"
           ? type
           : layout.direction === "TB" || layout.direction === "BT"
             ? // A vertical flow reads better with an orthogonal elbow than with
@@ -356,7 +369,9 @@ export function compileGraph(spec: unknown, rows: unknown[], options: CompileGra
   });
 
   // ── nodes -> React Flow nodes ────────────────────────────────────────────
-  const palette = Array.isArray(options.palette) ? options.palette.filter((c): c is string => asString(c) !== undefined) : [];
+  const palette = Array.isArray(options.palette)
+    ? options.palette.filter((c): c is string => asString(c) !== undefined)
+    : [];
   const compiledNodes: FlowNode[] = nodes.map((node, index) => {
     const row = rowFor(safeRows, node.id);
     const explicit = readPosition(node.position);

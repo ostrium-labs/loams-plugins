@@ -23,10 +23,7 @@
  * echarts service lands on unthemed options.
  */
 import { Context, Service } from "cordis";
-import {
-  DASHBOARD_THEME_PARAM,
-  splitRenderParams,
-} from "@loams-plugins/plugin-echarts-render";
+import { DASHBOARD_THEME_PARAM, splitRenderParams } from "@loams-plugins/plugin-echarts-render";
 import { compileGraph, type CompiledGraph } from "./compiler.js";
 import { flowThemeFromDecisions, DEFAULT_FLOW_THEME, type FlowTheme } from "./theme.js";
 import type { DesignDecisions, ThemeReport } from "flint-chart/core";
@@ -248,7 +245,10 @@ export class FlowRenderService extends Service {
     }
 
     if (typeof bridge.groundTheme !== "function") {
-      this._warnOnce("no-ground", "No groundTheme() on the flint service; rendering the graph unthemed");
+      this._warnOnce(
+        "no-ground",
+        "No groundTheme() on the flint service; rendering the graph unthemed",
+      );
       return { ...DEFAULT_FLOW_THEME };
     }
 

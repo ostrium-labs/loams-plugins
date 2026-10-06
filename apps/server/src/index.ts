@@ -143,9 +143,17 @@ async function bootstrap() {
 
   ctx.logger.info(
     "✓ Cordis context initialized with plugins: %s",
-    ["store", "controlPlane", "data", "flint", "render", "flow", "dashboard", "agentTools", "core"].join(
-      ", ",
-    ),
+    [
+      "store",
+      "controlPlane",
+      "data",
+      "flint",
+      "render",
+      "flow",
+      "dashboard",
+      "agentTools",
+      "core",
+    ].join(", "),
   );
   ctx.logger.info(
     "✓ Plugin host ready: %s (%s); control plane at /api/plugins, agent cards at /.well-known/agent-card.json",

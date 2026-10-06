@@ -59,7 +59,9 @@ describe("declineEChartsRender", () => {
   });
 
   it("does not decline a chart widget", () => {
-    expect(declineEChartsRender({ id: "w", type: "chart", chart: { kind: "line" } })).toBeUndefined();
+    expect(
+      declineEChartsRender({ id: "w", type: "chart", chart: { kind: "line" } }),
+    ).toBeUndefined();
   });
 
   it("does not decline an untyped widget, so the existing contract is untouched", () => {
@@ -149,9 +151,15 @@ describe("the pre-existing chart errors are unchanged", () => {
 
   it("still compiles a chart widget whose flint compile fails, via the native path", async () => {
     const ctx = new Context();
-    ctx.provide("data", { async fetchWidgetData() { return { data: [{ x: 1, y: 2 }] }; } });
+    ctx.provide("data", {
+      async fetchWidgetData() {
+        return { data: [{ x: 1, y: 2 }] };
+      },
+    });
     ctx.provide("flint", {
-      compile: vi.fn(async () => { throw new Error("flint is down"); }),
+      compile: vi.fn(async () => {
+        throw new Error("flint is down");
+      }),
       resolveWidgetTheme: () => ({ valid: true, source: "none" }),
     } as never);
     const warn = vi.spyOn(ctx.logger, "warn");

@@ -37,7 +37,12 @@ const widget = (over: Partial<Widget> = {}) =>
   ({
     id: "w-graph",
     type: "graph",
-    graph: { nodes: [{ id: "web", label: "Web" }, { id: "api", label: "API" }] },
+    graph: {
+      nodes: [
+        { id: "web", label: "Web" },
+        { id: "api", label: "API" },
+      ],
+    },
     ...over,
   }) as unknown as Widget;
 
@@ -70,7 +75,10 @@ describe("toFlowView", () => {
   });
 
   it("replaces a non-finite position rather than passing NaN through", () => {
-    const view = toFlowView({ nodes: [{ id: "a", position: { x: NaN, y: 0 }, data: {} }], edges: [] });
+    const view = toFlowView({
+      nodes: [{ id: "a", position: { x: NaN, y: 0 }, data: {} }],
+      edges: [],
+    });
     expect(Number.isFinite(view.nodes[0].position.x)).toBe(true);
   });
 
@@ -184,9 +192,9 @@ describe("graphParamFilter", () => {
 
 describe("graph titles", () => {
   it("uses an explicit title when the widget carries one", () => {
-    expect(graphTitle(widget({ graph: { title: "Service Map", nodes: [{ id: "a" }] } } as never))).toBe(
-      "Service Map",
-    );
+    expect(
+      graphTitle(widget({ graph: { title: "Service Map", nodes: [{ id: "a" }] } } as never)),
+    ).toBe("Service Map");
   });
 
   it("falls back to a graph-specific default rather than the chart default", () => {
